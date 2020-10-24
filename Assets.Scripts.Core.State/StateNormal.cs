@@ -215,13 +215,11 @@ namespace Assets.Scripts.Core.State
 					{
 						return false;
 					}
-					int censorNum = BurikoMemory.Instance.GetGlobalFlag("GCensor").IntValue();
-					int maxCensorNum = BurikoMemory.Instance.GetGlobalFlag("GCensorMaxNum").IntValue();
-					censorNum = (censorNum + 1) % (maxCensorNum + 1); //cycle from 0 to maxCensorNum
-					BurikoMemory.Instance.SetGlobalFlag("GCensor", censorNum);
+
+					int newCensorNum = IncrementFlagWithRolloverAndSave("GCensor", "GCensorMaxNum");
 					GameSystem.Instance.MainUIController.ShowToast(
-						$"Censorship Level: {censorNum}{(censorNum == 2 ? " (default)" : "")}",
-						numberedSound: censorNum
+						$"Censorship Level: {newCensorNum}{(newCensorNum == 2 ? " (default)" : "")}",
+						numberedSound: newCensorNum
 					);
 				}
 				if (Input.GetKeyDown(KeyCode.F3))
@@ -350,14 +348,10 @@ namespace Assets.Scripts.Core.State
 					{
 						return false;
 					}
-					if (BurikoMemory.Instance.GetGlobalFlag("GAltBGM").IntValue() == 1)
-					{
-						BurikoMemory.Instance.SetGlobalFlag("GAltBGM", 0);
-						GameSystem.Instance.AudioController.PlaySystemSound("switchsound/disable.ogg");
-						return true;
-					}
-					BurikoMemory.Instance.SetGlobalFlag("GAltBGM", 1);
-					GameSystem.Instance.AudioController.PlaySystemSound("switchsound/enable.ogg");
+
+					bool altBGMEnabled = ToggleFlagAndSave("GAltBGM");
+					GameSystem.Instance.MainUIController.ShowToast($"Alt BGM: {(altBGMEnabled ? "ON" : "OFF")}", isEnable: altBGMEnabled);
+					return true;
 				}
 				if (Input.GetKeyDown(KeyCode.Alpha2) || Input.GetKeyDown(KeyCode.Keypad2))
 				{
@@ -373,21 +367,10 @@ namespace Assets.Scripts.Core.State
 					{
 						return false;
 					}
-					int num9 = BurikoMemory.Instance.GetGlobalFlag("GAltBGMflow").IntValue();
-					int num10 = BurikoMemory.Instance.GetGlobalFlag("GAltBGMflowMaxNum").IntValue();
-					if (num9 < num10 && num9 >= 0)
-					{
-						num9++;
-						string str7 = num9.ToString();
-						string str8 = ".ogg";
-						string filename4 = "switchsound/" + str7 + str8;
-						GameSystem.Instance.AudioController.PlaySystemSound(filename4);
-						BurikoMemory.Instance.SetGlobalFlag("GAltBGMflow", num9);
-						return true;
-					}
-					num9 = 0;
-					BurikoMemory.Instance.SetGlobalFlag("GAltBGMflow", num9);
-					GameSystem.Instance.AudioController.PlaySystemSound("switchsound/0.ogg");
+
+					int newAltBGMFlow = IncrementFlagWithRolloverAndSave("GAltBGMflow", "GAltBGMflowMaxNum");
+					GameSystem.Instance.MainUIController.ShowToast($"Alt BGM Flow: {newAltBGMFlow}", numberedSound: newAltBGMFlow);
+					return true;
 				}
 				if (Input.GetKeyDown(KeyCode.Alpha3) || Input.GetKeyDown(KeyCode.Keypad3))
 				{
@@ -403,14 +386,10 @@ namespace Assets.Scripts.Core.State
 					{
 						return false;
 					}
-					if (BurikoMemory.Instance.GetGlobalFlag("GAltSE").IntValue() == 1)
-					{
-						BurikoMemory.Instance.SetGlobalFlag("GAltSE", 0);
-						GameSystem.Instance.AudioController.PlaySystemSound("switchsound/disable.ogg");
-						return true;
-					}
-					BurikoMemory.Instance.SetGlobalFlag("GAltSE", 1);
-					GameSystem.Instance.AudioController.PlaySystemSound("switchsound/enable.ogg");
+
+					bool seIsEnabled = ToggleFlagAndSave("GAltSE");
+					GameSystem.Instance.MainUIController.ShowToast($"Alt SE: {(seIsEnabled ? "ON" : "OFF")}", isEnable: seIsEnabled);
+					return true;
 				}
 				if (Input.GetKeyDown(KeyCode.Alpha4) || Input.GetKeyDown(KeyCode.Keypad4))
 				{
@@ -426,21 +405,10 @@ namespace Assets.Scripts.Core.State
 					{
 						return false;
 					}
-					int num11 = BurikoMemory.Instance.GetGlobalFlag("GAltSEflow").IntValue();
-					int num12 = BurikoMemory.Instance.GetGlobalFlag("GAltSEflowMaxNum").IntValue();
-					if (num11 < num12 && num11 >= 0)
-					{
-						num11++;
-						string str9 = num11.ToString();
-						string str10 = ".ogg";
-						string filename5 = "switchsound/" + str9 + str10;
-						GameSystem.Instance.AudioController.PlaySystemSound(filename5);
-						BurikoMemory.Instance.SetGlobalFlag("GAltSEflow", num11);
-						return true;
-					}
-					num11 = 0;
-					BurikoMemory.Instance.SetGlobalFlag("GAltSEflow", num11);
-					GameSystem.Instance.AudioController.PlaySystemSound("switchsound/0.ogg");
+
+					int newAltBGMFlow = IncrementFlagWithRolloverAndSave("GAltSEflow", "GAltSEflowMaxNum");
+					GameSystem.Instance.MainUIController.ShowToast($"Alt SE Flow: {newAltBGMFlow}", numberedSound: newAltBGMFlow);
+					return true;
 				}
 				if (Input.GetKeyDown(KeyCode.Alpha5) || Input.GetKeyDown(KeyCode.Keypad5))
 				{
@@ -456,14 +424,10 @@ namespace Assets.Scripts.Core.State
 					{
 						return false;
 					}
-					if (BurikoMemory.Instance.GetGlobalFlag("GAltVoice").IntValue() == 1)
-					{
-						BurikoMemory.Instance.SetGlobalFlag("GAltVoice", 0);
-						GameSystem.Instance.AudioController.PlaySystemSound("switchsound/disable.ogg");
-						return true;
-					}
-					BurikoMemory.Instance.SetGlobalFlag("GAltVoice", 1);
-					GameSystem.Instance.AudioController.PlaySystemSound("switchsound/enable.ogg");
+
+					bool altVoiceIsEnabled = ToggleFlagAndSave("GAltVoice");
+					GameSystem.Instance.MainUIController.ShowToast($"Alt Voice: {(altVoiceIsEnabled ? "ON" : "OFF")}", isEnable: altVoiceIsEnabled);
+					return true;
 				}
 				if (Input.GetKeyDown(KeyCode.Alpha6) || Input.GetKeyDown(KeyCode.Keypad6))
 				{
@@ -479,14 +443,10 @@ namespace Assets.Scripts.Core.State
 					{
 						return false;
 					}
-					if (BurikoMemory.Instance.GetGlobalFlag("GAltVoicePriority").IntValue() == 1)
-					{
-						BurikoMemory.Instance.SetGlobalFlag("GAltVoicePriority", 0);
-						GameSystem.Instance.AudioController.PlaySystemSound("switchsound/disable.ogg");
-						return true;
-					}
-					BurikoMemory.Instance.SetGlobalFlag("GAltVoicePriority", 1);
-					GameSystem.Instance.AudioController.PlaySystemSound("switchsound/enable.ogg");
+
+					bool altVoicePriorityIsEnabled = ToggleFlagAndSave("GAltVoicePriority");
+					GameSystem.Instance.MainUIController.ShowToast($"Alt Priority: {(altVoicePriorityIsEnabled ? "ON" : "OFF")}", isEnable: altVoicePriorityIsEnabled);
+					return true;
 				}
 				if (Input.GetKeyDown(KeyCode.Alpha7) || Input.GetKeyDown(KeyCode.Keypad7))
 				{
@@ -504,9 +464,9 @@ namespace Assets.Scripts.Core.State
 					}
 
 					// Toggle lipsync between 0 and 1
-					int newLipSync = (BurikoMemory.Instance.GetGlobalFlag("GLipSync").IntValue() + 1) % 2;
-					BurikoMemory.Instance.SetGlobalFlag("GLipSync", newLipSync);
-					GameSystem.Instance.MainUIController.ShowToast($"Lip Sync: {(newLipSync == 1 ? "ON": "OFF")}");
+					bool lipSyncIsEnabled = ToggleFlagAndSave("GLipSync");
+					GameSystem.Instance.MainUIController.ShowToast($"Lip Sync: {(lipSyncIsEnabled ? "ON" : "OFF")}");
+					return true;
 				}
 				if (Input.GetKeyDown(KeyCode.M))
 				{
@@ -661,6 +621,26 @@ namespace Assets.Scripts.Core.State
 			// For some reason the script uses "256" as the default volume, which gets divided by 128 to become 2.0f,
 			// so to keep in line with the script, the test volume is set to "2.0f"
 			GameSystem.Instance.AudioController.PlayVoice("voice_test.ogg", 3, 2.0f);
+		}
+
+		private int IncrementFlagWithRolloverAndSave(string flagName, string maxFlagName)
+		{
+			int newValue = BurikoMemory.Instance.GetGlobalFlag(flagName).IntValue() + 1;
+			if (newValue > BurikoMemory.Instance.GetGlobalFlag(maxFlagName).IntValue())
+			{
+				newValue = 0;
+			}
+			BurikoMemory.Instance.SetGlobalFlag(flagName, newValue);
+
+			return newValue;
+		}
+
+		private bool ToggleFlagAndSave(string flagName)
+		{
+			int newValue = (BurikoMemory.Instance.GetGlobalFlag(flagName).IntValue() + 1) % 2;
+			BurikoMemory.Instance.SetGlobalFlag(flagName, newValue);
+
+			return newValue == 1;
 		}
 	}
 }
