@@ -56,6 +56,20 @@ namespace Assets.Scripts.UI
 		private string toastText = "Example Toast Notification";
 		private GUIStyle labelStyle;
 
+		public enum Sound
+		{
+			Click,
+			LoudBang,
+			Disable,
+			Enable,
+			Pluck0,
+			Pluck1,
+			Pluck2,
+			Pluck3,
+			Pluck4,
+			Pluck5,
+		}
+
 		public void UpdateGuiPosition(int x, int y)
 		{
 			unscaledPosition = new Vector3((float)x, (float)y, 0f);
@@ -486,6 +500,7 @@ namespace Assets.Scripts.UI
 				GameSystem.Instance.MainUIController.bgLayer.DrawLayer("windo_filter", 0, 0, 0, null, gameSystem.MessageWindowOpacity, /*isBustshot:*/ false, 0, 0f, /*isBlocking:*/ false);
 				GameSystem.Instance.MainUIController.bgLayer2.DrawLayer("windo_filter", 0, 0, 0, null, gameSystem.MessageWindowOpacity, /*isBustshot:*/ false, 0, 0f, /*isBlocking:*/ false);
 				mODMainUIController.NVLModeSettingStore();
+				GameSystem.Instance.MainUIController.ShowToast($"Textbox: NVL Mode", isEnable: false);
 			}
 			else
 			{
@@ -496,6 +511,7 @@ namespace Assets.Scripts.UI
 				GameSystem.Instance.MainUIController.bgLayer.DrawLayer("windo_filter_adv", 0, 0, 0, null, gameSystem.MessageWindowOpacity, /*isBustshot:*/ false, 0, 0f, /*isBlocking:*/ false);
 				GameSystem.Instance.MainUIController.bgLayer2.DrawLayer("windo_filter_adv", 0, 0, 0, null, gameSystem.MessageWindowOpacity, /*isBustshot:*/ false, 0, 0f, /*isBlocking:*/ false);
 				mODMainUIController.ADVModeSettingStore();
+				GameSystem.Instance.MainUIController.ShowToast($"Textbox: ADV Mode", isEnable: true);
 			}
 		}
 
@@ -539,7 +555,7 @@ namespace Assets.Scripts.UI
 				labelStyle = new GUIStyle(GUI.skin.box) //Copy the default style for 'box' as a base
 				{
 					alignment = TextAnchor.UpperCenter,
-					fontSize = 45,
+					fontSize = 40,
 					fontStyle = FontStyle.Bold,
 				};
 				int width = 1;
@@ -809,16 +825,82 @@ namespace Assets.Scripts.UI
 			new MODMainUIController().DebugFontChangerSettingStore();
 		}
 
+		private string GetSoundPathFromEnum(Sound sound)
+		{
+			switch (sound)
+			{
+				case Sound.Click:
+					return "wa_038.ogg";
+				case Sound.LoudBang:
+					return "wa_040.ogg";
+				case Sound.Disable:
+					return "switchsound/disable.ogg";
+				case Sound.Enable:
+					return "switchsound/enable.ogg";
+				case Sound.Pluck0:
+					return "switchsound/0.ogg";
+				case Sound.Pluck1:
+					return "switchsound/1.ogg";
+				case Sound.Pluck2:
+					return "switchsound/2.ogg";
+				case Sound.Pluck3:
+					return "switchsound/3.ogg";
+				case Sound.Pluck4:
+					return "switchsound/4.ogg";
+				case Sound.Pluck5:
+					return "switchsound/5.ogg";
+			}
+
+			return "wa_038.ogg";
+		}
+
 		/// <summary>
 		/// Displays a toast notification. It will appear ontop of everything else on the screen.
 		/// </summary>
 		/// <param name="toastText">The text to display in the toast</param>
 		/// <param name="toastDuration">The duration the toast will be shown for.
 		/// The toast will slide off the screen for the last part of this duration.</param>
-		public void ShowToast(string toastText, float toastDuration = 3)
+		public void ShowToast(string toastText, Sound? maybeSound = Sound.Click, float toastDuration = 3)
 		{
 			this.toastText = toastText;
 			this.toastNotificationTimer = toastDuration;
+			if (maybeSound is Sound sound)
+			{
+				GameSystem.Instance.AudioController.PlaySystemSound(GetSoundPathFromEnum(sound));
+			}
+		}
+
+		public void ShowToast(string toastText, bool isEnable, float toastDuration = 3)
+		{
+			ShowToast(toastText, isEnable ? Sound.Enable : Sound.Disable, toastDuration);
+		}
+
+		public void ShowToast(string toastText, int numberedSound, float toastDuration = 3)
+		{
+			Sound sound = Sound.Click;
+			switch (numberedSound)
+			{
+				case 0:
+					sound = Sound.Pluck0;
+					break;
+				case 1:
+					sound = Sound.Pluck1;
+					break;
+				case 2:
+					sound = Sound.Pluck2;
+					break;
+				case 3:
+					sound = Sound.Pluck3;
+					break;
+				case 4:
+					sound = Sound.Pluck4;
+					break;
+				case 5:
+					sound = Sound.Pluck5;
+					break;
+			}
+
+			ShowToast(toastText, sound, toastDuration);
 		}
 	}
 }
