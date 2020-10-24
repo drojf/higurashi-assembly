@@ -441,25 +441,17 @@ namespace Assets.Scripts.UI
 
 		private void Update()
 		{
-			if (Input.GetKeyDown(KeyCode.F11))
-			{
-				// Loop "GVideoOpening" over the values 1-3.
-				// 0 is skipped as it represents "value not set"
-				int newVideoOpening = BurikoMemory.Instance.GetGlobalFlag("GVideoOpening").IntValue() + 1;
-				if (newVideoOpening > 3)
-				{
-					newVideoOpening = 1;
-				}
-				BurikoMemory.Instance.SetGlobalFlag("GVideoOpening", newVideoOpening);
-				GameSystem.Instance.MainUIController.ShowToast($"OP Video: {VideoOpeningDescription(newVideoOpening)} ({newVideoOpening})");
-			}
-
-			// Update the toast countdown timer, making sure it doesn't go below 0
-			toastNotificationTimer = Math.Max(0, toastNotificationTimer - Time.deltaTime);
 			if (gameSystem == null)
 			{
 				gameSystem = GameSystem.Instance;
 			}
+
+			// Update the toast countdown timer, making sure it doesn't go below 0
+			toastNotificationTimer = Math.Max(0, toastNotificationTimer - Time.deltaTime);
+
+			// Handle mod keyboard shortcuts
+			ModInputHandler();
+
 			int num = 402;
 			int num2 = 402;
 			if (gameSystem.IsSkipping && !gameSystem.IsForceSkip)
@@ -932,5 +924,261 @@ namespace Assets.Scripts.UI
 
 			return "Unknown";
 		}
+
+		private void AdjustVoiceVolumeRelative(int difference)
+		{
+			// Maintaining volume within limits is done in AdjustVoiceVolumeAbsolute()
+			AdjustVoiceVolumeAbsolute(BurikoMemory.Instance.GetGlobalFlag("GVoiceVolume").IntValue() + difference);
+		}
+
+		private void AdjustVoiceVolumeAbsolute(int uncheckedNewVolume)
+		{
+			int newVolume = Mathf.Clamp(uncheckedNewVolume, 0, 100);
+
+			BurikoMemory.Instance.SetGlobalFlag("GVoiceVolume", newVolume);
+			GameSystem.Instance.AudioController.VoiceVolume = (float)newVolume / 100f;
+			GameSystem.Instance.AudioController.RefreshLayerVolumes();
+
+			// Play a sample voice file so the user can get feedback on the set volume
+			// For some reason the script uses "256" as the default volume, which gets divided by 128 to become 2.0f,
+			// so to keep in line with the script, the test volume is set to "2.0f"
+			GameSystem.Instance.AudioController.PlayVoice("voice_test.ogg", 3, 2.0f);
+		}
+
+		private int IncrementFlagWithRolloverAndSave(string flagName, string maxFlagName)
+		{
+			int newValue = BurikoMemory.Instance.GetGlobalFlag(flagName).IntValue() + 1;
+			if (newValue > BurikoMemory.Instance.GetGlobalFlag(maxFlagName).IntValue())
+			{
+				newValue = 0;
+			}
+			BurikoMemory.Instance.SetGlobalFlag(flagName, newValue);
+
+			return newValue;
+		}
+
+		private bool ToggleFlagAndSave(string flagName)
+		{
+			int newValue = (BurikoMemory.Instance.GetGlobalFlag(flagName).IntValue() + 1) % 2;
+			BurikoMemory.Instance.SetGlobalFlag(flagName, newValue);
+
+			return newValue == 1;
+		}
+
+		public bool ModInputHandler()
+		{
+			if (!gameSystem.IsInitialized || gameSystem.IsAuto || gameSystem.IsSkipping || gameSystem.IsForceSkip)
+			{
+				return true;
+			}
+
+			// Don't allow mod options on any wait, except "WaitForInput"
+			// Note: if this is removed, it mostly still works, but if changing art style during
+			// an animation, some things may bug out until the next scene.
+			foreach(Wait w in gameSystem.WaitList)
+			{
+				if(w.Type != WaitTypes.WaitForInput)
+				{
+					return true;
+				}
+			}
+
+			// Handle Shift-keys
+			// NOTE: If shift is held, the 'normal' keys without modifiers won't trigger
+			if (Input.GetKey(KeyCode.LeftShift))
+			{
+				// TODO: identify what this is used for
+				if (Input.GetKeyDown(KeyCode.F10))
+				{
+					if (BurikoMemory.Instance.GetGlobalFlag("GMOD_DEBUG_MODE").IntValue() == 0)
+					{
+						return false;
+					}
+					if (BurikoMemory.Instance.GetGlobalFlag("GMOD_DEBUG_MODE").IntValue() == 1)
+					{
+						BurikoMemory.Instance.SetGlobalFlag("GMOD_DEBUG_MODE", 2);
+						GameSystem.Instance.AudioController.PlaySystemSound("switchsound/enable.ogg");
+						return true;
+					}
+					BurikoMemory.Instance.SetGlobalFlag("GMOD_DEBUG_MODE", 1);
+					GameSystem.Instance.AudioController.PlaySystemSound("switchsound/disable.ogg");
+					return true;
+				}
+
+				// Restore game settings
+				if (Input.GetKeyDown(KeyCode.F9))
+				{
+					int num = BurikoMemory.Instance.GetGlobalFlag("GMOD_SETTING_LOADER").IntValue();
+					if (num < 3 && num >= 0)
+					{
+						num++;
+						string str = num.ToString();
+						string str2 = ".ogg";
+						string filename = "switchsound/" + str + str2;
+						GameSystem.Instance.AudioController.PlaySystemSound(filename);
+						BurikoMemory.Instance.SetGlobalFlag("GMOD_SETTING_LOADER", num);
+						return true;
+					}
+					num = 0;
+					BurikoMemory.Instance.SetGlobalFlag("GMOD_SETTING_LOADER", num);
+					GameSystem.Instance.AudioController.PlaySystemSound("switchsound/0.ogg");
+				}
+
+				// Shift-M = set volume to max
+				if (Input.GetKeyDown(KeyCode.M))
+				{
+					AdjustVoiceVolumeAbsolute(100);
+					return true;
+				}
+
+				// Shift-N = set volume to min
+				if (Input.GetKeyDown(KeyCode.N))
+				{
+					AdjustVoiceVolumeAbsolute(0);
+					return true;
+				}
+
+				// Prevent shift keys also triggering non-shift keys by returning early
+				return true;
+			}
+
+			// Handle non-shift keys
+			if (Input.GetKeyDown(KeyCode.F1))
+			{
+				if (BurikoMemory.Instance.GetFlag("NVL_in_ADV").IntValue() == 1)
+				{
+					GameSystem.Instance.MainUIController.ShowToast($"Can't toggle now - try later", maybeSound: null);
+				}
+				else
+				{
+					GameSystem.Instance.MainUIController.MODResetLayerBackground();
+				}
+			}
+			if (Input.GetKeyDown(KeyCode.F2))
+			{
+				int newCensorNum = IncrementFlagWithRolloverAndSave("GCensor", "GCensorMaxNum");
+				GameSystem.Instance.MainUIController.ShowToast(
+					$"Censorship Level: {newCensorNum}{(newCensorNum == 2 ? " (default)" : "")}",
+					numberedSound: newCensorNum
+				);
+			}
+			if (Input.GetKeyDown(KeyCode.F3))
+			{
+				int num6 = BurikoMemory.Instance.GetGlobalFlag("GEffectExtend").IntValue();
+				int num7 = BurikoMemory.Instance.GetGlobalFlag("GEffectExtendMaxNum").IntValue();
+				if (num6 < num7 && num6 >= 0)
+				{
+					num6++;
+					string str5 = num6.ToString();
+					string str6 = ".ogg";
+					string filename3 = "switchsound/" + str5 + str6;
+					GameSystem.Instance.AudioController.PlaySystemSound(filename3);
+					BurikoMemory.Instance.SetGlobalFlag("GEffectExtend", num6);
+					return true;
+				}
+				num6 = 0;
+				BurikoMemory.Instance.SetGlobalFlag("GEffectExtend", num6);
+				GameSystem.Instance.AudioController.PlaySystemSound("switchsound/0.ogg");
+			}
+			if (Input.GetKeyDown(KeyCode.F10))
+			{
+				if (BurikoMemory.Instance.GetGlobalFlag("GMOD_DEBUG_MODE").IntValue() != 1 && BurikoMemory.Instance.GetGlobalFlag("GMOD_DEBUG_MODE").IntValue() != 2)
+				{
+					if (BurikoMemory.Instance.GetFlag("LFlagMonitor").IntValue() == 0)
+					{
+						BurikoMemory.Instance.SetFlag("LFlagMonitor", 1);
+						return true;
+					}
+					if (BurikoMemory.Instance.GetFlag("LFlagMonitor").IntValue() == 1)
+					{
+						BurikoMemory.Instance.SetFlag("LFlagMonitor", 2);
+						return true;
+					}
+					BurikoMemory.Instance.SetFlag("LFlagMonitor", 0);
+					return true;
+				}
+				int num8 = BurikoMemory.Instance.GetFlag("LFlagMonitor").IntValue();
+				if (num8 < 4)
+				{
+					num8++;
+					BurikoMemory.Instance.SetFlag("LFlagMonitor", num8);
+					return true;
+				}
+				if (num8 >= 4 || num8 < 0)
+				{
+					BurikoMemory.Instance.SetFlag("LFlagMonitor", 0);
+					return true;
+				}
+			}
+			if (Input.GetKeyDown(KeyCode.F11))
+			{
+				// Loop "GVideoOpening" over the values 1-3.
+				// 0 is skipped as it represents "value not set"
+				int newVideoOpening = BurikoMemory.Instance.GetGlobalFlag("GVideoOpening").IntValue() + 1;
+				if (newVideoOpening > 3)
+				{
+					newVideoOpening = 1;
+				}
+				BurikoMemory.Instance.SetGlobalFlag("GVideoOpening", newVideoOpening);
+				GameSystem.Instance.MainUIController.ShowToast($"OP Video: {VideoOpeningDescription(newVideoOpening)} ({newVideoOpening})");
+			}
+			if (Input.GetKeyDown(KeyCode.Alpha0) || Input.GetKeyDown(KeyCode.Keypad0))
+			{
+				if (BurikoMemory.Instance.GetGlobalFlag("GMOD_DEBUG_MODE").IntValue() == 1 || BurikoMemory.Instance.GetGlobalFlag("GMOD_DEBUG_MODE").IntValue() == 2)
+				{
+					GameSystem.Instance.MainUIController.MODDebugFontSizeChanger();
+				}
+			}
+			if (Input.GetKeyDown(KeyCode.Alpha1) || Input.GetKeyDown(KeyCode.Keypad1))
+			{
+				bool altBGMEnabled = ToggleFlagAndSave("GAltBGM");
+				GameSystem.Instance.MainUIController.ShowToast($"Alt BGM: {(altBGMEnabled ? "ON" : "OFF")}", isEnable: altBGMEnabled);
+			}
+			if (Input.GetKeyDown(KeyCode.Alpha2) || Input.GetKeyDown(KeyCode.Keypad2))
+			{
+				int newAltBGMFlow = IncrementFlagWithRolloverAndSave("GAltBGMflow", "GAltBGMflowMaxNum");
+				GameSystem.Instance.MainUIController.ShowToast($"Alt BGM Flow: {newAltBGMFlow}", numberedSound: newAltBGMFlow);
+			}
+			if (Input.GetKeyDown(KeyCode.Alpha3) || Input.GetKeyDown(KeyCode.Keypad3))
+			{
+				bool seIsEnabled = ToggleFlagAndSave("GAltSE");
+				GameSystem.Instance.MainUIController.ShowToast($"Alt SE: {(seIsEnabled ? "ON" : "OFF")}", isEnable: seIsEnabled);
+			}
+			if (Input.GetKeyDown(KeyCode.Alpha4) || Input.GetKeyDown(KeyCode.Keypad4))
+			{
+				int newAltBGMFlow = IncrementFlagWithRolloverAndSave("GAltSEflow", "GAltSEflowMaxNum");
+				GameSystem.Instance.MainUIController.ShowToast($"Alt SE Flow: {newAltBGMFlow}", numberedSound: newAltBGMFlow);
+			}
+			if (Input.GetKeyDown(KeyCode.Alpha5) || Input.GetKeyDown(KeyCode.Keypad5))
+			{
+				bool altVoiceIsEnabled = ToggleFlagAndSave("GAltVoice");
+				GameSystem.Instance.MainUIController.ShowToast($"Alt Voice: {(altVoiceIsEnabled ? "ON" : "OFF")}", isEnable: altVoiceIsEnabled);
+			}
+			if (Input.GetKeyDown(KeyCode.Alpha6) || Input.GetKeyDown(KeyCode.Keypad6))
+			{
+				bool altVoicePriorityIsEnabled = ToggleFlagAndSave("GAltVoicePriority");
+				GameSystem.Instance.MainUIController.ShowToast($"Alt Priority: {(altVoicePriorityIsEnabled ? "ON" : "OFF")}", isEnable: altVoicePriorityIsEnabled);
+			}
+			if (Input.GetKeyDown(KeyCode.Alpha7) || Input.GetKeyDown(KeyCode.Keypad7))
+			{
+				bool lipSyncIsEnabled = ToggleFlagAndSave("GLipSync");
+				GameSystem.Instance.MainUIController.ShowToast($"Lip Sync: {(lipSyncIsEnabled ? "ON" : "OFF")}");
+			}
+			if (Input.GetKeyDown(KeyCode.M))
+			{
+				AdjustVoiceVolumeRelative(5);
+			}
+			if (Input.GetKeyDown(KeyCode.P))
+			{
+				MOD.Scripts.Core.MODSystem.instance.modTextureController.ToggleArtStyle();
+			}
+			if (Input.GetKeyDown(KeyCode.N))
+			{
+				AdjustVoiceVolumeRelative(-5);
+			}
+
+			return true;
+		}
+
 	}
 }
