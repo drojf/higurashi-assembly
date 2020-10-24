@@ -51,6 +51,11 @@ namespace Assets.Scripts.UI
 
 		private Vector3 unscaledPosition;
 
+		// While this timer is > 0, the current toast will be displayed (in seconds)
+		private float toastNotificationTimer;
+		private string toastText = "Example Toast Notification";
+		private GUIStyle labelStyle;
+
 		public void UpdateGuiPosition(int x, int y)
 		{
 			unscaledPosition = new Vector3((float)x, (float)y, 0f);
@@ -422,6 +427,8 @@ namespace Assets.Scripts.UI
 
 		private void Update()
 		{
+			// Update the toast countdown timer, making sure it doesn't go below 0
+			toastNotificationTimer = Math.Max(0, toastNotificationTimer - Time.deltaTime);
 			if (gameSystem == null)
 			{
 				gameSystem = GameSystem.Instance;
@@ -524,6 +531,32 @@ namespace Assets.Scripts.UI
 
 		public void OnGUI()
 		{
+			// This sets up the style of the toast notification (mostly to make the font bigger and the text anchor location)
+			// From what I've read, The GUIStyle must be initialized in OnGUI(), otherwise
+			// GUI.skin.label will not be defined, so please do not move this part elsewhere without testing it.
+			if(labelStyle == null)
+			{
+				labelStyle = new GUIStyle(GUI.skin.box) //Copy the default style for 'box' as a base
+				{
+					alignment = TextAnchor.UpperCenter,
+					fontSize = 45,
+					fontStyle = FontStyle.Bold,
+				};
+				int width = 1;
+				int height = 1;
+				Color[] pix = new Color[width * height];
+				for(int i = 0; i < pix.Length; i++)
+				{
+					pix[i] = new Color(0.0f, 0.0f, 0.0f, 0.8f);
+				}
+				Texture2D result = new Texture2D(width, height);
+				result.SetPixels(pix);
+				result.Apply();
+				labelStyle.normal.background = result;
+
+				labelStyle.normal.textColor = Color.white;
+			}
+
 			// Helper Functions for processing flags
 			string boolDesc(string flag, string name)
 			{
@@ -758,11 +791,34 @@ namespace Assets.Scripts.UI
 				);
 				GUI.TextArea(new Rect(320f, 0f, 320f, 1080f), textToDraw, 900);
 			}
+
+			if(toastNotificationTimer > 0)
+			{
+				// This scrolls the toast notification off the window when it's nearly finished
+				float toastYPosition = Math.Min(50f, 200f * toastNotificationTimer - 50f);
+				float toastWidth = 700f;
+				float toastXPosition = (Screen.width - toastWidth) / 2.0f;
+				GUILayout.BeginArea(new Rect(toastXPosition, toastYPosition, 700f, 200f));
+				GUILayout.Box(toastText, labelStyle);
+				GUILayout.EndArea();
+			}
 		}
 
 		public void MODDebugFontSizeChanger()
 		{
 			new MODMainUIController().DebugFontChangerSettingStore();
+		}
+
+		/// <summary>
+		/// Displays a toast notification. It will appear ontop of everything else on the screen.
+		/// </summary>
+		/// <param name="toastText">The text to display in the toast</param>
+		/// <param name="toastDuration">The duration the toast will be shown for.
+		/// The toast will slide off the screen for the last part of this duration.</param>
+		public void ShowToast(string toastText, float toastDuration = 3)
+		{
+			this.toastText = toastText;
+			this.toastNotificationTimer = toastDuration;
 		}
 	}
 }
