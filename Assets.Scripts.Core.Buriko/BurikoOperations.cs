@@ -130,6 +130,7 @@ namespace Assets.Scripts.Core.Buriko
 		ModADVModeSettingLoad,
 		ModNVLModeSettingLoad,
 		ModNVLADVModeSettingLoad,
+		ModRyukishiModeSettingLoad,
 		ModCallScriptSection,
 		ModDrawCharacter,
 		ModDrawCharacterWithFiltering,

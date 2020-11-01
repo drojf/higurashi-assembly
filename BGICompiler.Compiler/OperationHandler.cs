@@ -158,6 +158,7 @@ namespace BGICompiler.Compiler
 			paramLookup.Add("ModADVModeSettingLoad", new OpType(BurikoOperations.ModADVModeSettingLoad, "siiiiiiiiiiii"));
 			paramLookup.Add("ModNVLModeSettingLoad", new OpType(BurikoOperations.ModNVLModeSettingLoad, "siiiiiiiiiiii"));
 			paramLookup.Add("ModNVLADVModeSettingLoad", new OpType(BurikoOperations.ModNVLADVModeSettingLoad, "siiiiiiiiiiii"));
+			paramLookup.Add("ModRyukishiModeSettingLoad", new OpType(BurikoOperations.ModRyukishiModeSettingLoad, "siiiiiiiiiiii"));
 			paramLookup.Add("ModCallScriptSection", new OpType(BurikoOperations.ModCallScriptSection, "ss"));
 			paramLookup.Add("ModDrawCharacter", new OpType(BurikoOperations.ModDrawCharacter, "iissiiibiiiiiiiiib"));
 			paramLookup.Add("ModDrawCharacterWithFiltering", new OpType(BurikoOperations.ModDrawCharacterWithFiltering, "iisssiiibiiiiiiib"));
