@@ -500,27 +500,6 @@ namespace Assets.Scripts.Core.Scene
 					}
 				}
 			}
-
-			System.Text.StringBuilder sb = new System.Text.StringBuilder();
-
-			sb.AppendLine($"Drawing {textureName} at x,y,z = {x},{y},{z} isBustshot: {isBustshot}");// Mesh: {(mesh == null ? "null" : (mesh.uv == null ? "null mesh" : mesh.uv))}");
-			if (mesh != null && mesh.uv != null)
-			{
-				for (int i = 0; i < 4; i++)
-				{
-					sb.AppendLine($"UV {i}: {mesh.uv[i][0]}, {mesh.uv[i][1]}");
-				}
-			}
-
-			if (mesh != null && mesh.vertices != null)
-			{
-				for (int i = 0; i < mesh.vertexCount; i++)
-				{
-					sb.AppendLine($"Vertex {i}: {mesh.vertices[i][0]}, {mesh.vertices[i][1]}");
-				}
-			}
-
-			Logger.Log(sb.ToString());
 		}
 
 		public void SetAngle(float angle, float wait)
