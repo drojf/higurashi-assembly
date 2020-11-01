@@ -1265,7 +1265,10 @@ namespace Assets.Scripts.UI
 					break;
 
 				case Action.ForceShowCG:
-					BurikoMemory.Instance.SetGlobalFlag("GHideCG", 0);
+					{
+						bool cgIsHidden = ToggleFlagAndSave("GHideCG");
+						GameSystem.Instance.MainUIController.ShowToast($"Hide CG: {(cgIsHidden ? "ON" : "OFF")}", isEnable: cgIsHidden);
+					}
 					break;
 
 
