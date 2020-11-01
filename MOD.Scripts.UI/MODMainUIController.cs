@@ -86,17 +86,14 @@ namespace MOD.Scripts.UI
 
 		// NOTE: The textbox location seems tied to the aspect ratio
 		// This means that:
-		//   - when the Gui position is (170, 0) and the aspect is 16:9,
+		//   - when the Gui position is (170, 0),
 		//     you set the textbox posx to -170 (this is how the mod is by default)
-		//
-		//   - when the Gui position is (  0, 0) and the aspect is 16:9,
-		//     you set the textbox posx to -170 (this is how I've setup ryukishi mode)
-		//   - when the Gui position is (  0, 0) and the aspect is 4:3,
+		//   - when the Gui position is (  0, 0),
 		//     you set the textbox posx to 0 (this is the original game's setting)
 
 		// Ryukishi Mode Settings, with default values
 		private static string RyukishiModeNameFormat = "";
-		private static int RyukishiModeWindowPosX = -170;
+		private static int RyukishiModeWindowPosX = 0;
 		private static int RyukishiModeWindowPosY = 10;
 		private static int RyukishiModeWindowSizeX = 1024;
 		private static int RyukishiModeWindowSizeY = 768;
