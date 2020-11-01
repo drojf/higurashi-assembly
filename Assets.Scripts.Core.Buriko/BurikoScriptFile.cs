@@ -2142,6 +2142,8 @@ namespace Assets.Scripts.Core.Buriko
 				return OperationMODNVLModeSettingLoad();
 			case BurikoOperations.ModNVLADVModeSettingLoad:
 				return OperationMODNVLADVModeSettingLoad();
+			case BurikoOperations.ModRyukishiModeSettingLoad:
+				return OperationMODRyukishiModeSettingLoad();
 			case BurikoOperations.ModCallScriptSection:
 				return OperationMODCallScriptSection();
 			case BurikoOperations.ModDrawCharacter:
@@ -2374,6 +2376,27 @@ namespace Assets.Scripts.Core.Buriko
 			int lspace = ReadVariable().IntValue();
 			int fsize = ReadVariable().IntValue();
 			mODMainUIController.NVLADVModeSettingLoad(name, posx, posy, sizex, sizey, mleft, mtop, mright, mbottom, font, cspace, lspace, fsize);
+			return BurikoVariable.Null;
+		}
+
+		public BurikoVariable OperationMODRyukishiModeSettingLoad()
+		{
+			SetOperationType("ModRyukishiModeSettingLoad");
+			MODMainUIController mODMainUIController = new MODMainUIController();
+			string name = ReadVariable().StringValue();
+			int posx = ReadVariable().IntValue();
+			int posy = ReadVariable().IntValue();
+			int sizex = ReadVariable().IntValue();
+			int sizey = ReadVariable().IntValue();
+			int mleft = ReadVariable().IntValue();
+			int mtop = ReadVariable().IntValue();
+			int mright = ReadVariable().IntValue();
+			int mbottom = ReadVariable().IntValue();
+			int font = ReadVariable().IntValue();
+			int cspace = ReadVariable().IntValue();
+			int lspace = ReadVariable().IntValue();
+			int fsize = ReadVariable().IntValue();
+			mODMainUIController.RyukishiModeSettingLoad(name, posx, posy, sizex, sizey, mleft, mtop, mright, mbottom, font, cspace, lspace, fsize);
 			return BurikoVariable.Null;
 		}
 
