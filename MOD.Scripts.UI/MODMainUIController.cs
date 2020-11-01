@@ -84,6 +84,16 @@ namespace MOD.Scripts.UI
 
 		private static int NVLADVModeFontID;
 
+		// NOTE: The textbox location seems tied to the aspect ratio
+		// This means that:
+		//   - when the Gui position is (170, 0) and the aspect is 16:9,
+		//     you set the textbox posx to -170 (this is how the mod is by default)
+		//
+		//   - when the Gui position is (  0, 0) and the aspect is 16:9,
+		//     you set the textbox posx to -170 (this is how I've setup ryukishi mode)
+		//   - when the Gui position is (  0, 0) and the aspect is 4:3,
+		//     you set the textbox posx to 0 (this is the original game's setting)
+
 		// Ryukishi Mode Settings, with default values
 		private static string RyukishiModeNameFormat = "";
 		private static int RyukishiModeWindowPosX = -170;
