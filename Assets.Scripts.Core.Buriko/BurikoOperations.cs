@@ -125,6 +125,7 @@ namespace Assets.Scripts.Core.Buriko
 		SetNameFormat,
 		SetScreenAspect,
 		SetGuiPosition,
+		ModRyukishiSetGuiPosition,
 		ModEnableNVLModeInADVMode,
 		ModDisableNVLModeInADVMode,
 		ModADVModeSettingLoad,
