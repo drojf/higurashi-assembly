@@ -461,6 +461,21 @@ namespace Assets.Scripts.UI
 				gameSystem = GameSystem.Instance;
 			}
 
+			// TODO: reset font size after page turn
+			var TextArea = gameSystem.TextController.TextArea;
+			if (TextArea.text != string.Empty)
+			{
+				TMP_LineInfo tMP_LineInfo = TextArea.textInfo.lineInfo[TextArea.textInfo.lineCount - 1];
+				// Returns a value where 1 is the top of the screen, and -1 is the bottom of the screen.
+				// If the value is less than -1, it means the text has extended beyond the bottom of the screen.
+				float textBottomAbsolute = TextArea.transform.TransformPoint(new Vector3(0, TextArea.textInfo.characterInfo[tMP_LineInfo.lastCharacterIndex].baseLine)).y;
+				if (textBottomAbsolute < -1.0f)
+				{
+					float scalingRequired = -1.0f / textBottomAbsolute;
+					SetFontSize(Mathf.FloorToInt(TextWindow.fontSize * scalingRequired));
+				}
+			}
+
 			// Update the toast countdown timer, making sure it doesn't go below 0
 			toastNotificationTimer = Math.Max(0, toastNotificationTimer - Time.deltaTime);
 
