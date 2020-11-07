@@ -14,29 +14,28 @@ namespace MOD.Scripts.UI
 		static MODToaster Instance;
 		private MODStyleManager styleManager;
 		string toastText;
-		float toastNotificationTimer;
+		MODSimpleTimer toastNotificationTimer;
 
 		public MODToaster(MODStyleManager styleManager)
 		{
 			this.styleManager = styleManager;
 			this.toastText = "";
-			this.toastNotificationTimer = 0;
+			this.toastNotificationTimer = new MODSimpleTimer();
 
 			Instance = this;
 		}
 
 		public void Update()
 		{
-			// Update the toast countdown timer, making sure it doesn't go below 0
-			toastNotificationTimer = Math.Max(0, toastNotificationTimer - Time.deltaTime);
+			toastNotificationTimer.Update();
 		}
 
 		public void OnGUIFragment()
 		{
-			if (toastNotificationTimer > 0)
+			if (!toastNotificationTimer.Finished())
 			{
 				// This scrolls the toast notification off the window when it's nearly finished
-				float toastYPosition = Math.Min(50f, 200f * toastNotificationTimer - 50f);
+				float toastYPosition = Math.Min(50f, 200f * toastNotificationTimer.timeLeft - 50f);
 				float toastWidth = 700f;
 				float toastXPosition = (Screen.width - toastWidth) / 2.0f;
 				GUILayout.BeginArea(new Rect(toastXPosition, toastYPosition, 700f, 200f));
@@ -59,7 +58,7 @@ namespace MOD.Scripts.UI
 			}
 
 			Instance.toastText = toastText;
-			Instance.toastNotificationTimer = toastDuration;
+			Instance.toastNotificationTimer.Start(toastDuration);
 			if (maybeSound is GUISound sound)
 			{
 				GameSystem.Instance.AudioController.PlaySystemSound(MODSound.GetSoundPathFromEnum(sound));

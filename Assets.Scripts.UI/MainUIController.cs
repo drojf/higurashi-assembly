@@ -438,6 +438,11 @@ namespace Assets.Scripts.UI
 				toaster.Update();
 			}
 
+			if (modMenu != null)
+			{
+				modMenu.Update();
+			}
+
 			// Handle mod keyboard shortcuts
 			MODKeyboardShortcuts.ModInputHandler();
 
@@ -633,7 +638,6 @@ namespace Assets.Scripts.UI
 					"F5 : QuickSave",
 					"F7 : QuickLoad",
 					"F10 : Setting Monitor",
-					"SHIFT-F11 : OP Movies",
 					"M : Increase Voice Volume",
 					"N : Decrease Voice Volume",
 					"1 : Alternative BGM (Not Used)",

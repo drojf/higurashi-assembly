@@ -53,12 +53,43 @@ namespace MOD.Scripts.UI
 		private readonly MODRadio radioStretchBackgrounds;
 		private readonly GameSystem gameSystem;
 		public bool visible;
+		private MODSimpleTimer defaultToolTipTimer;
+
+		string lastToolTip = String.Empty;
+		string defaultTooltip = @"Hover over a button on the left panel for its description.
+
+[Vanilla Hotkeys]
+Enter,Return,RightArrow,PageDown : Advance Text
+LeftArrow,Pageup : See Backlog
+ESC : Open Menu
+Ctrl : Hold Skip Mode
+A : Auto Mode
+S : Toggle Skip Mode
+F : FullScreen
+Space : Hide Text
+L : Swap Language
+P : Swap Sprites
+
+[MOD Hotkeys]
+F1 : ADV-NVL MODE
+F2 : Voice Matching Level
+F3 : Effect Level (Not Used)
+F5 : QuickSave
+F7 : QuickLoad
+F10 : Setting Monitor
+M : Increase Voice Volume
+N : Decrease Voice Volume
+7 : Lip-Sync
+LShift + F9 : Restore Settings
+LShift + M : Voice Volume MAX
+LShift + N : Voice Volume MIN";
 
 		public MODMenu(GameSystem gameSystem, MODStyleManager styleManager)
 		{
 			this.gameSystem = gameSystem;
 			this.styleManager = styleManager;
 			this.visible = false;
+			this.defaultToolTipTimer = new MODSimpleTimer();
 
 			string baseCensorshipDescription = @"
 
@@ -85,12 +116,12 @@ Sets the script censorship level
 				new GUIContent("Lip Sync On", "Enables Lip Sync for Console Sprites"),
 			}, styleManager);
 
-			this.radioOpenings = new MODRadio("OP Movies", new GUIContent[]
+			this.radioOpenings = new MODRadio("Opening Movies", new GUIContent[]
 			{
 				new GUIContent("Disabled", "Disables all opening videos"),
 				new GUIContent("In-Game Only", "Enables opening videos which play during the story"),
-				new GUIContent("At Launch + In-Game", "Opening videos will play just after game launches, and also during the story"),
-			}, styleManager, itemsPerRow: 2);
+				new GUIContent("Launch + In-Game", "Opening videos will play just after game launches, and also during the story"),
+			}, styleManager);
 
 			this.radioHideCG = new MODRadio("CG Show/Hide", new GUIContent[]
 			{
@@ -100,9 +131,16 @@ Sets the script censorship level
 
 			this.radioStretchBackgrounds = new MODRadio("Stretch Backgrounds", new GUIContent[]
 			{
-				new GUIContent("Normal Backgrounds", "Displays backgrounds at their original aspect ratio"),
-				new GUIContent("Stretch Backgrounds", "Stretches backgrounds to the game's 16:9 aspect ratio (mainly for use with the Original/Ryukishi backgrounds)"),
+				new GUIContent("Normal Backgrounds", "NOTE: This only starts working on the next background transition!\n" +
+				"Displays backgrounds at their original aspect ratio"),
+				new GUIContent("Stretch Backgrounds", "NOTE: This only starts working on the next background transition!\n" +
+				"Stretches backgrounds to the game's 16:9 aspect ratio (mainly for use with the Original/Ryukishi backgrounds)"),
 			}, styleManager);
+		}
+
+		public void Update()
+		{
+			defaultToolTipTimer.Update();
 		}
 
 		private void OnGUIPresetsFragment()
@@ -135,6 +173,39 @@ Sets the script censorship level
 			GUILayout.EndHorizontal();
 		}
 
+		private void OnGUIRestoreSettings()
+		{
+			GUILayout.Label($"Restore Settings {(GetGlobal("GMOD_SETTING_LOADER") == 3 ? "" : ": <Restart Pending>")}");
+
+			GUILayout.BeginHorizontal();
+			if (GetGlobal("GMOD_SETTING_LOADER") == 3)
+			{
+				if (GUILayout.Button(new GUIContent("ADV defaults", "This restores flags to the defaults for NVL mode\n" +
+					"NOTE: Requires you to relaunch the game 2 times to come into effect")))
+				{
+					SetGlobal("GMOD_SETTING_LOADER", 0);
+				}
+				else if (GUILayout.Button(new GUIContent("NVL defaults", "This restores flags to the defaults for NVL mode\n" +
+					"NOTE: Requires you to relaunch the game 2 times to come into effect")))
+				{
+					SetGlobal("GMOD_SETTING_LOADER", 1);
+				}
+				else if (GUILayout.Button(new GUIContent("Vanilla Defaults", "This restores flags to the same settings as the unmodded game.\n" +
+					"NOTE: Requires a relaunch to come into effect. After this, uninstall the mod.")))
+				{
+					SetGlobal("GMOD_SETTING_LOADER", 2);
+				}
+			}
+			else
+			{
+				if (GUILayout.Button(new GUIContent("Cancel Pending Restore", "Click this to stop restoring defaults on next game launch")))
+				{
+					SetGlobal("GMOD_SETTING_LOADER", 3);
+				}
+			}
+			GUILayout.EndHorizontal();
+		}
+
 		/// <summary>
 		/// Must be called from an OnGUI()
 		/// </summary>
@@ -142,20 +213,18 @@ Sets the script censorship level
 		{
 			if (this.visible)
 			{
-				float areaWidth = 350;
-				float totalAreaWidth = areaWidth * 2;
+				float areaWidth = 400;
+				float toolTipWidth = 350;
+				float totalAreaWidth = areaWidth + toolTipWidth;
 				float areaHeight = 500;
 
 				float areaPosX = Screen.width / 2 - totalAreaWidth / 2;
 				float areaPosY = Screen.height / 2 - areaHeight / 2;
 
-				float area2PosX = areaPosX + areaWidth;
+				float toolTipPosX = areaPosX + areaWidth;
 
-				float exitButtonWidth = areaWidth * .1f;
-				float exitButtonHeight = areaHeight * .05f;
-
-				int GetGlobal(string flagName) => BurikoMemory.Instance.GetGlobalFlag(flagName).IntValue();
-				void SetGlobal(string flagName, int flagValue) => BurikoMemory.Instance.SetGlobalFlag(flagName, flagValue);
+				float exitButtonWidth = toolTipWidth * .1f;
+				float exitButtonHeight = toolTipWidth * .05f;
 
 				// Radio buttons
 				GUILayout.BeginArea(new Rect(areaPosX, areaPosY, areaWidth, areaHeight), styleManager.modGUIStyle);
@@ -185,27 +254,46 @@ Sets the script censorship level
 					{
 						SetGlobal("GStretchBackgrounds", stretchBackgrounds);
 					};
+
+					//TODO: reset settings
+					OnGUIRestoreSettings();
 				GUILayout.EndArea();
 
 				// Descriptions for each button are shown on hover, like a tooltip
-				GUILayout.BeginArea(new Rect(area2PosX, areaPosY, areaWidth, areaHeight), styleManager.modGUIStyle);
-					GUILayout.Space(exitButtonHeight);
+				GUILayout.BeginArea(new Rect(toolTipPosX, areaPosY, toolTipWidth, areaHeight), styleManager.modGUIStyle);
+				GUILayout.Space(exitButtonHeight);
 
-					// MUST pass in MinHeight option, otherwise Unity will get confused and assume
-					// label is one line high on first draw, and subsquent changes will truncate
-					// label to one line even if it is multiple lines tall.
-					GUILayout.Label(GUI.tooltip == String.Empty ? "Hover over a button to see its description." : GUI.tooltip, GUILayout.MinHeight(areaHeight));
+				string displayedToolTip;
+				if (GUI.tooltip == String.Empty)
+				{
+					if (defaultToolTipTimer.Finished())
+					{
+						displayedToolTip = defaultTooltip;
+					}
+					else
+					{
+						displayedToolTip = lastToolTip;
+					}
+				}
+				else
+				{
+					lastToolTip = GUI.tooltip;
+					displayedToolTip = GUI.tooltip;
+					defaultToolTipTimer.Start(.2f);
+				}
+				// MUST pass in MinHeight option, otherwise Unity will get confused and assume
+				// label is one line high on first draw, and subsquent changes will truncate
+				// label to one line even if it is multiple lines tall.
+				GUILayout.Label(displayedToolTip, GUILayout.MinHeight(areaHeight));
 				GUILayout.EndArea();
 
 				// Exit button
-				GUILayout.BeginArea(new Rect(area2PosX + areaWidth - exitButtonWidth, areaPosY, exitButtonWidth, exitButtonHeight));
+				GUILayout.BeginArea(new Rect(toolTipPosX + toolTipWidth - exitButtonWidth, areaPosY, exitButtonWidth, exitButtonHeight));
 					if(GUILayout.Button("X"))
 					{
 						this.Hide();
 					}
 				GUILayout.EndArea();
-
-
 			}
 		}
 
@@ -272,5 +360,8 @@ Sets the script censorship level
 				gameSystem.ExecuteActions();
 			}
 		}
+
+		private int GetGlobal(string flagName) => BurikoMemory.Instance.GetGlobalFlag(flagName).IntValue();
+		private void SetGlobal(string flagName, int flagValue) => BurikoMemory.Instance.SetGlobalFlag(flagName, flagValue);
 	}
 }

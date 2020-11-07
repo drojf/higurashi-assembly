@@ -78,6 +78,7 @@ namespace MOD.Scripts.UI
 				BurikoMemory.Instance.SetGlobalFlag("GLinemodeSp", 0);
 				BurikoMemory.Instance.SetGlobalFlag("GRyukishiMode", 0);
 				BurikoMemory.Instance.SetGlobalFlag("GHideCG", 0);
+				BurikoMemory.Instance.SetGlobalFlag("GStretchBackgrounds", 0);
 				TryRedrawTextWindowBackground(WindowFilterType.ADV);
 				mODMainUIController.WideGuiPositionStore();
 				mODMainUIController.ADVModeSettingStore();
@@ -88,7 +89,7 @@ namespace MOD.Scripts.UI
 					feedbackString += "\nIn NVL region - changes won't be displayed until later";
 					toastDuration = 5;
 				}
-				MODToaster.Show($"Set ADV Mode", isEnable: true);
+				MODToaster.Show(feedbackString, isEnable: true, toastDuration: toastDuration);
 			}
 			else if (setting == ModPreset.NVL)
 			{
@@ -96,6 +97,7 @@ namespace MOD.Scripts.UI
 				BurikoMemory.Instance.SetGlobalFlag("GLinemodeSp", 2);
 				BurikoMemory.Instance.SetGlobalFlag("GRyukishiMode", 0);
 				BurikoMemory.Instance.SetGlobalFlag("GHideCG", 0);
+				BurikoMemory.Instance.SetGlobalFlag("GStretchBackgrounds", 0);
 				TryRedrawTextWindowBackground(WindowFilterType.Normal);
 				mODMainUIController.WideGuiPositionStore();
 				mODMainUIController.NVLModeSettingStore();
@@ -107,6 +109,7 @@ namespace MOD.Scripts.UI
 				BurikoMemory.Instance.SetGlobalFlag("GLinemodeSp", 2);
 				BurikoMemory.Instance.SetGlobalFlag("GRyukishiMode", 1);
 				BurikoMemory.Instance.SetGlobalFlag("GHideCG", 1);
+				BurikoMemory.Instance.SetGlobalFlag("GStretchBackgrounds", 0);
 				TryRedrawTextWindowBackground(WindowFilterType.OG);
 				mODMainUIController.RyukishiGuiPositionStore();
 				mODMainUIController.RyukishiModeSettingStore();
