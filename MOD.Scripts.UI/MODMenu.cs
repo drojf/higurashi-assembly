@@ -47,11 +47,6 @@ namespace MOD.Scripts.UI
 
 			return null;
 		}
-
-		public void UpdateRadioContents(GUIContent[] radioContents)
-		{
-			this.radioContents = radioContents;
-		}
 	}
 
 	public class MODMenu
@@ -62,8 +57,8 @@ namespace MOD.Scripts.UI
 		private readonly MODRadio radioOpenings;
 		private readonly MODRadio radioHideCG;
 		private readonly MODRadio radioStretchBackgrounds;
-		private readonly MODRadio radioSprites;
 		private readonly MODRadio radioBackgrounds;
+		private readonly MODRadio radioArtSet;
 		private readonly GameSystem gameSystem;
 		public bool visible;
 		private MODSimpleTimer defaultToolTipTimer;
@@ -148,9 +143,17 @@ Sets the script censorship level
 				new GUIContent("Stretch Backgrounds", "Stretches backgrounds to the game's 16:9 aspect ratio (mainly for use with the Original/Ryukishi backgrounds)"),
 			}, styleManager);
 
-			// Reload the content of these radios each time menu is shown
-			this.radioSprites = new MODRadio("Choose Sprites", new GUIContent[]{}, styleManager);
-			this.radioBackgrounds = new MODRadio("Choose Sprites", new GUIContent[]{}, styleManager);
+			this.radioArtSet = new MODRadio("Choose Art Set", new GUIContent[] {
+				new GUIContent("Console", "Use the Console sprites and backgrounds"),
+				new GUIContent("Remake", "Use Mangagmer's remake sprites with Console backgrounds"),
+				new GUIContent("Original/Remake", "USe Original/Ryukishi sprites and backgrounds"),
+			}, styleManager);
+
+			this.radioBackgrounds = new MODRadio("Override Backgrounds", new GUIContent[]{
+				new GUIContent("Use Artset", "Use the default sprites on the given artset"),
+				new GUIContent("Force Console", "Force Console backgrounds, regardless of the artset"),
+				new GUIContent("Force Original", "Force Original/Ryukishi backgrounds, regardless of the artset"),
+			}, styleManager);
 		}
 
 		public void Update()
@@ -239,7 +242,7 @@ Sets the script censorship level
 				float areaWidth = 400;
 				float toolTipWidth = 350;
 				float totalAreaWidth = areaWidth + toolTipWidth;
-				float areaHeight = 500;
+				float areaHeight = 550;
 
 				float areaPosX = Screen.width / 2 - totalAreaWidth / 2;
 				float areaPosY = Screen.height / 2 - areaHeight / 2;
@@ -279,17 +282,19 @@ Sets the script censorship level
 						GameSystem.Instance.SceneController.ReloadAllImages();
 					};
 
-					if(this.radioBackgrounds.OnGUIFragment(GetGlobal("GBackgroundSet") - 1) is int backgroundSet)
+					if (this.radioArtSet.OnGUIFragment(Core.MODSystem.instance.modTextureController.GetArtStyle()) is int artStyle)
 					{
-						SetGlobal("GBackgroundSet", backgroundSet + 1);
+						Core.MODSystem.instance.modTextureController.SetArtStyle(artStyle);
 					}
 
-					if (this.radioSprites.OnGUIFragment(GetGlobal("GSpriteSet") - 1) is int spriteSet)
+					if (this.radioBackgrounds.OnGUIFragment(GetGlobal("GBackgroundSet")) is int backgroundSet)
 					{
-						SetGlobal("GSpriteSet", spriteSet + 1);
+						SetGlobal("GBackgroundSet", backgroundSet);
+						GameSystem.Instance.SceneController.ReloadAllImages();
 					}
 
 				//TODO: reset settings
+				GUILayout.Space(5);
 				OnGUIRestoreSettings();
 				GUILayout.EndArea();
 

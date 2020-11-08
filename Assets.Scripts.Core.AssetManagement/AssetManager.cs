@@ -87,9 +87,27 @@ namespace Assets.Scripts.Core.AssetManagement
 		/// <returns>A path to an on-disk asset or null</returns>
 		public string PathToAssetWithName(string name, PathCascadeList artset)
 		{
-			foreach (var path in artset.paths)
+			int backgroundSetIndex = BurikoMemory.Instance.GetGlobalFlag("GBackgroundSet").IntValue();
+
+			// If force og backgrounds is enabled, always check OGBackgrounds first.
+			if (backgroundSetIndex == 2)
 			{
-				string filePath = Path.Combine(Path.Combine(assetPath, path), name);
+				string filePath = Path.Combine(Path.Combine(assetPath, "OGBackgrounds"), name);
+				if (File.Exists(filePath))
+				{
+					return filePath;
+				}
+			}
+
+			foreach (var artSetPath in artset.paths)
+			{
+				// If force console backgrounds is enabled, don't check OGBackgrounds
+				if (backgroundSetIndex == 1 && artSetPath == "OGBackgrounds")
+				{
+					continue;
+				}
+
+				string filePath = Path.Combine(Path.Combine(assetPath, artSetPath), name);
 				if (File.Exists(filePath))
 				{
 					return filePath;
@@ -247,45 +265,6 @@ namespace Assets.Scripts.Core.AssetManagement
 			return LoadTexture(textureName, out _);
 		}
 
-
-		public string OverridePathToAssetWithName(string path, string textureName)
-		{
-			string GetPath(string streamingAssetsPath, string subdir, string _textureName)
-			{
-				string filePath = Path.Combine(Path.Combine(streamingAssetsPath, subdir), _textureName);
-				if (File.Exists(filePath))
-				{
-					return filePath;
-				}
-
-				return null;
-			}
-
-			if (path == null)
-			{
-				int backgroundSetIndex = BurikoMemory.Instance.GetGlobalFlag("GBackgroundSet").IntValue();
-				if (backgroundSetIndex == 1)
-				{
-					path = GetPath(Application.streamingAssetsPath, "OGBackgrounds", textureName);
-				}
-			}
-
-			if(path == null)
-			{
-				int spriteSetIndex = BurikoMemory.Instance.GetGlobalFlag("GSpriteSet").IntValue();
-				if (spriteSetIndex == 1)
-				{
-					path = GetPath(Application.streamingAssetsPath, "CGAlt", textureName);
-				}
-				else if (spriteSetIndex == 2)
-				{
-					path = GetPath(Application.streamingAssetsPath, "OGSprites", textureName);
-				}
-			}
-
-			return path;
-		}
-
 		public Texture2D LoadTexture(string textureName, out string texturePath)
 		{
 			if (textureName == "windo_filter" && windowTexture != null)
@@ -294,21 +273,16 @@ namespace Assets.Scripts.Core.AssetManagement
 				return windowTexture;
 			}
 			string path = null;
-			string japaneseTextureName = textureName.ToLower() + "_j.png";
-			string englishTextureName = textureName.ToLower() + ".png";
-
-			path = OverridePathToAssetWithName(path, japaneseTextureName);
-			path = OverridePathToAssetWithName(path, englishTextureName);
 
 			// Load path from current artset
 			if (path == null && !GameSystem.Instance.UseEnglishText)
 			{
-				path = PathToAssetWithName(japaneseTextureName, CurrentArtset);
+				path = PathToAssetWithName(textureName.ToLower() + "_j.png", CurrentArtset);
 			}
 
 			if (path == null)
 			{
-				path = PathToAssetWithName(englishTextureName, CurrentArtset);
+				path = PathToAssetWithName(textureName.ToLower() + ".png", CurrentArtset);
 			}
 
 			if (path == null)
