@@ -9,6 +9,123 @@ using UnityEngine;
 
 namespace Assets.Scripts.Core.AssetManagement
 {
+	//enum FolderAssetsType
+	//{
+	//	unknown,        //The folder contains unknown types of assets
+	//	mixed,          //The folder contains mixed assets (eg backgrounds, sprites, effects all together)
+	//	sprites,        //The folder contains only sprites
+	//	backgrounds,    //The folder contains only backgrounds
+	//}
+
+	class CustomPathCascade
+	{
+		public class ArtPathGroup
+		{
+			public class IndividualPathProperties
+			{
+				public string displayName;
+				public string path;
+
+				public IndividualPathProperties(string displayName, string path)
+				{
+					this.displayName = displayName;
+					this.path = path;
+				}
+			}
+
+			List<IndividualPathProperties> paths;
+			int current;
+
+			public ArtPathGroup()
+			{
+				this.current = 0;
+			}
+
+			public void AddPath(string displayName, string path)
+			{
+				paths.Add(new IndividualPathProperties(displayName, path));
+			}
+
+			public void NextPath()
+			{
+				this.current = (this.current + 1) % paths.Count;
+			}
+
+			public string GetDisplayName()
+			{
+				if(this.paths.Count == 0)
+				{
+					return "no paths available";
+				}
+				else
+				{
+					return this.paths[this.current].displayName;
+				}
+			}
+
+			/// <summary>
+			/// Returns the currently selected path, or null if no pathers were ever added.
+			/// </summary>
+			/// <returns></returns>
+			public string GetPathOfAsset(string streamingAssetsPath, string assetPath)
+			{
+				if(this.paths.Count == 0)
+				{
+					return null;
+				}
+
+				string artSetPath = this.paths[this.current].path;
+
+				string filePath = Path.Combine(Path.Combine(streamingAssetsPath, artSetPath), assetPath);
+
+				return File.Exists(filePath) ? filePath : null;
+			}
+		}
+
+		public readonly ArtPathGroup mixed;
+		public readonly ArtPathGroup background;
+		public readonly ArtPathGroup sprite;
+
+		public CustomPathCascade()
+		{
+			this.mixed = new ArtPathGroup();
+			this.background = new ArtPathGroup();
+			this.sprite = new ArtPathGroup();
+		}
+
+		private void AddFolder(string displayName, string folderName)
+		{
+			string folderNameLowerCase = folderName.ToLower();
+			if(folderNameLowerCase == "cg")
+			{
+				this.mixed.AddPath(displayName, folderName);
+			}
+			else if(folderNameLowerCase == "cgalt")
+			{
+				this.sprite.AddPath(displayName, folderName);
+			}
+			else if(folderNameLowerCase.Contains("background"))
+			{
+				this.background.AddPath(displayName, folderName);
+			}
+			else if(folderNameLowerCase.Contains("sprite"))
+			{
+				this.sprite.AddPath(displayName, folderName);
+			}
+		}
+
+		/// <summary>
+		/// Gets the path to an asset
+		/// </summary>
+		/// <returns>A path to an on-disk asset or null</returns>
+		public string PathToAssetWithName(string streamingAssetsPath, string assetPath)
+		{
+			return	this.sprite.GetPathOfAsset(streamingAssetsPath, assetPath)		??
+					this.background.GetPathOfAsset(streamingAssetsPath, assetPath)	??
+					this.mixed.GetPathOfAsset(streamingAssetsPath, assetPath);
+		}
+	}
+
 	/// <summary>
 	/// Stores an ordered list of paths for the engine to check when trying to find a cg
 	/// </summary>
@@ -23,6 +140,7 @@ namespace Assets.Scripts.Core.AssetManagement
 			this.paths = paths;
 		}
 	}
+
 	public class AssetManager {
 		private static AssetManager _instance;
 
