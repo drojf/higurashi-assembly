@@ -5,126 +5,11 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using UnityEngine;
 
 namespace Assets.Scripts.Core.AssetManagement
 {
-	//enum FolderAssetsType
-	//{
-	//	unknown,        //The folder contains unknown types of assets
-	//	mixed,          //The folder contains mixed assets (eg backgrounds, sprites, effects all together)
-	//	sprites,        //The folder contains only sprites
-	//	backgrounds,    //The folder contains only backgrounds
-	//}
-
-	class CustomPathCascade
-	{
-		public class ArtPathGroup
-		{
-			public class IndividualPathProperties
-			{
-				public string displayName;
-				public string path;
-
-				public IndividualPathProperties(string displayName, string path)
-				{
-					this.displayName = displayName;
-					this.path = path;
-				}
-			}
-
-			List<IndividualPathProperties> paths;
-			int current;
-
-			public ArtPathGroup()
-			{
-				this.current = 0;
-			}
-
-			public void AddPath(string displayName, string path)
-			{
-				paths.Add(new IndividualPathProperties(displayName, path));
-			}
-
-			public void NextPath()
-			{
-				this.current = (this.current + 1) % paths.Count;
-			}
-
-			public string GetDisplayName()
-			{
-				if(this.paths.Count == 0)
-				{
-					return "no paths available";
-				}
-				else
-				{
-					return this.paths[this.current].displayName;
-				}
-			}
-
-			/// <summary>
-			/// Returns the currently selected path, or null if no pathers were ever added.
-			/// </summary>
-			/// <returns></returns>
-			public string GetPathOfAsset(string streamingAssetsPath, string assetPath)
-			{
-				if(this.paths.Count == 0)
-				{
-					return null;
-				}
-
-				string artSetPath = this.paths[this.current].path;
-
-				string filePath = Path.Combine(Path.Combine(streamingAssetsPath, artSetPath), assetPath);
-
-				return File.Exists(filePath) ? filePath : null;
-			}
-		}
-
-		public readonly ArtPathGroup mixed;
-		public readonly ArtPathGroup background;
-		public readonly ArtPathGroup sprite;
-
-		public CustomPathCascade()
-		{
-			this.mixed = new ArtPathGroup();
-			this.background = new ArtPathGroup();
-			this.sprite = new ArtPathGroup();
-		}
-
-		private void AddFolder(string displayName, string folderName)
-		{
-			string folderNameLowerCase = folderName.ToLower();
-			if(folderNameLowerCase == "cg")
-			{
-				this.mixed.AddPath(displayName, folderName);
-			}
-			else if(folderNameLowerCase == "cgalt")
-			{
-				this.sprite.AddPath(displayName, folderName);
-			}
-			else if(folderNameLowerCase.Contains("background"))
-			{
-				this.background.AddPath(displayName, folderName);
-			}
-			else if(folderNameLowerCase.Contains("sprite"))
-			{
-				this.sprite.AddPath(displayName, folderName);
-			}
-		}
-
-		/// <summary>
-		/// Gets the path to an asset
-		/// </summary>
-		/// <returns>A path to an on-disk asset or null</returns>
-		public string PathToAssetWithName(string streamingAssetsPath, string assetPath)
-		{
-			return	this.sprite.GetPathOfAsset(streamingAssetsPath, assetPath)		??
-					this.background.GetPathOfAsset(streamingAssetsPath, assetPath)	??
-					this.mixed.GetPathOfAsset(streamingAssetsPath, assetPath);
-		}
-	}
 
 	/// <summary>
 	/// Stores an ordered list of paths for the engine to check when trying to find a cg
@@ -362,6 +247,45 @@ namespace Assets.Scripts.Core.AssetManagement
 			return LoadTexture(textureName, out _);
 		}
 
+
+		public string OverridePathToAssetWithName(string path, string textureName)
+		{
+			string GetPath(string streamingAssetsPath, string subdir, string _textureName)
+			{
+				string filePath = Path.Combine(Path.Combine(streamingAssetsPath, subdir), _textureName);
+				if (File.Exists(filePath))
+				{
+					return filePath;
+				}
+
+				return null;
+			}
+
+			if (path == null)
+			{
+				int backgroundSetIndex = BurikoMemory.Instance.GetGlobalFlag("GBackgroundSet").IntValue();
+				if (backgroundSetIndex == 1)
+				{
+					path = GetPath(Application.streamingAssetsPath, "OGBackgrounds", textureName);
+				}
+			}
+
+			if(path == null)
+			{
+				int spriteSetIndex = BurikoMemory.Instance.GetGlobalFlag("GSpriteSet").IntValue();
+				if (spriteSetIndex == 1)
+				{
+					path = GetPath(Application.streamingAssetsPath, "CGAlt", textureName);
+				}
+				else if (spriteSetIndex == 2)
+				{
+					path = GetPath(Application.streamingAssetsPath, "OGSprites", textureName);
+				}
+			}
+
+			return path;
+		}
+
 		public Texture2D LoadTexture(string textureName, out string texturePath)
 		{
 			if (textureName == "windo_filter" && windowTexture != null)
@@ -370,11 +294,23 @@ namespace Assets.Scripts.Core.AssetManagement
 				return windowTexture;
 			}
 			string path = null;
-			if (!GameSystem.Instance.UseEnglishText)
+			string japaneseTextureName = textureName.ToLower() + "_j.png";
+			string englishTextureName = textureName.ToLower() + ".png";
+
+			path = OverridePathToAssetWithName(path, japaneseTextureName);
+			path = OverridePathToAssetWithName(path, englishTextureName);
+
+			// Load path from current artset
+			if (path == null && !GameSystem.Instance.UseEnglishText)
 			{
-				path = PathToAssetWithName(textureName.ToLower() + "_j.png", CurrentArtset);
+				path = PathToAssetWithName(japaneseTextureName, CurrentArtset);
 			}
-			path = path ?? PathToAssetWithName(textureName.ToLower() + ".png", CurrentArtset);
+
+			if (path == null)
+			{
+				path = PathToAssetWithName(englishTextureName, CurrentArtset);
+			}
+
 			if (path == null)
 			{
 				Logger.LogWarning("Could not find texture asset " + textureName.ToLower() + " in " + CurrentArtset.nameEN);

@@ -1,9 +1,11 @@
 ﻿using Assets.Scripts.Core;
+using Assets.Scripts.Core.AssetManagement;
 using Assets.Scripts.Core.Buriko;
 using Assets.Scripts.Core.State;
 using MOD.Scripts.Core.State;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using UnityEngine;
 
@@ -20,7 +22,11 @@ namespace MOD.Scripts.UI
 		{
 			this.label = label;
 			this.radioContents = radioContents;
-			this.itemsPerRow = itemsPerRow == 0 ? radioContents.Length : itemsPerRow;
+			this.itemsPerRow = radioContents.Length == 0 ? 1 : radioContents.Length;
+			if(itemsPerRow != 0)
+			{
+				this.itemsPerRow = itemsPerRow;
+			}
 			this.styleManager = styleManager;
 		}
 
@@ -41,6 +47,11 @@ namespace MOD.Scripts.UI
 
 			return null;
 		}
+
+		public void UpdateRadioContents(GUIContent[] radioContents)
+		{
+			this.radioContents = radioContents;
+		}
 	}
 
 	public class MODMenu
@@ -51,6 +62,8 @@ namespace MOD.Scripts.UI
 		private readonly MODRadio radioOpenings;
 		private readonly MODRadio radioHideCG;
 		private readonly MODRadio radioStretchBackgrounds;
+		private readonly MODRadio radioSprites;
+		private readonly MODRadio radioBackgrounds;
 		private readonly GameSystem gameSystem;
 		public bool visible;
 		private MODSimpleTimer defaultToolTipTimer;
@@ -134,6 +147,10 @@ Sets the script censorship level
 				new GUIContent("Normal Backgrounds", "Displays backgrounds at their original aspect ratio"),
 				new GUIContent("Stretch Backgrounds", "Stretches backgrounds to the game's 16:9 aspect ratio (mainly for use with the Original/Ryukishi backgrounds)"),
 			}, styleManager);
+
+			// Reload the content of these radios each time menu is shown
+			this.radioSprites = new MODRadio("Choose Sprites", new GUIContent[]{}, styleManager);
+			this.radioBackgrounds = new MODRadio("Choose Sprites", new GUIContent[]{}, styleManager);
 		}
 
 		public void Update()
@@ -254,8 +271,18 @@ Sets the script censorship level
 						GameSystem.Instance.SceneController.ReloadAllImages();
 					};
 
-					//TODO: reset settings
-					OnGUIRestoreSettings();
+					if(this.radioBackgrounds.OnGUIFragment(GetGlobal("GBackgroundSet") - 1) is int backgroundSet)
+					{
+						SetGlobal("GBackgroundSet", backgroundSet + 1);
+					}
+
+					if (this.radioSprites.OnGUIFragment(GetGlobal("GSpriteSet") - 1) is int spriteSet)
+					{
+						SetGlobal("GSpriteSet", spriteSet + 1);
+					}
+
+				//TODO: reset settings
+				OnGUIRestoreSettings();
 				GUILayout.EndArea();
 
 				// Descriptions for each button are shown on hover, like a tooltip
