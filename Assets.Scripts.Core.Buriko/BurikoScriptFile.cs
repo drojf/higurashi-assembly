@@ -1868,12 +1868,23 @@ namespace Assets.Scripts.Core.Buriko
 			return BurikoVariable.Null;
 		}
 
+		// This has been modified so that we can save the 'default' UI position
 		private BurikoVariable OperationSetGuiPosition()
 		{
 			SetOperationType("SetGUIPosition");
 			int x = ReadVariable().IntValue();
 			int y = ReadVariable().IntValue();
-			gameSystem.MainUIController.UpdateGuiPosition(x, y);
+			MODMainUIController mODMainUIController = new MODMainUIController();
+			mODMainUIController.WideGuiPositionLoad(x, y);
+			return BurikoVariable.Null;
+		}
+		private BurikoVariable OperationSetRyukishiGuiPosition()
+		{
+			SetOperationType("ModRyukishiGuiPositionLoad");
+			int x = ReadVariable().IntValue();
+			int y = ReadVariable().IntValue();
+			MODMainUIController mODMainUIController = new MODMainUIController();
+			mODMainUIController.RyukishiGuiPositionLoad(x, y);
 			return BurikoVariable.Null;
 		}
 
@@ -2132,6 +2143,8 @@ namespace Assets.Scripts.Core.Buriko
 				return OperationSetScreenAspect();
 			case BurikoOperations.SetGuiPosition:
 				return OperationSetGuiPosition();
+			case BurikoOperations.ModRyukishiSetGuiPosition:
+				return OperationSetRyukishiGuiPosition();
 			case BurikoOperations.ModEnableNVLModeInADVMode:
 				return OperationMODenableNVLModeInADVMode();
 			case BurikoOperations.ModDisableNVLModeInADVMode:
@@ -2142,6 +2155,8 @@ namespace Assets.Scripts.Core.Buriko
 				return OperationMODNVLModeSettingLoad();
 			case BurikoOperations.ModNVLADVModeSettingLoad:
 				return OperationMODNVLADVModeSettingLoad();
+			case BurikoOperations.ModRyukishiModeSettingLoad:
+				return OperationMODRyukishiModeSettingLoad();
 			case BurikoOperations.ModCallScriptSection:
 				return OperationMODCallScriptSection();
 			case BurikoOperations.ModDrawCharacter:
@@ -2303,14 +2318,14 @@ namespace Assets.Scripts.Core.Buriko
 		private BurikoVariable OperationMODenableNVLModeInADVMode()
 		{
 			SetOperationType("ModEnableNVLModeInADVMode");
-			gameSystem.MainUIController.MODenableNVLModeINADVMode();
+			MODActions.EnableNVLModeINADVMode();
 			return BurikoVariable.Null;
 		}
 
 		private BurikoVariable OperationMODdisableNVLModeInADVMode()
 		{
 			SetOperationType("ModDisableNVLModeInADVMode");
-			gameSystem.MainUIController.MODdisableNVLModeINADVMode();
+			MODActions.DisableNVLModeINADVMode();
 			return BurikoVariable.Null;
 		}
 
@@ -2374,6 +2389,27 @@ namespace Assets.Scripts.Core.Buriko
 			int lspace = ReadVariable().IntValue();
 			int fsize = ReadVariable().IntValue();
 			mODMainUIController.NVLADVModeSettingLoad(name, posx, posy, sizex, sizey, mleft, mtop, mright, mbottom, font, cspace, lspace, fsize);
+			return BurikoVariable.Null;
+		}
+
+		public BurikoVariable OperationMODRyukishiModeSettingLoad()
+		{
+			SetOperationType("ModRyukishiModeSettingLoad");
+			MODMainUIController mODMainUIController = new MODMainUIController();
+			string name = ReadVariable().StringValue();
+			int posx = ReadVariable().IntValue();
+			int posy = ReadVariable().IntValue();
+			int sizex = ReadVariable().IntValue();
+			int sizey = ReadVariable().IntValue();
+			int mleft = ReadVariable().IntValue();
+			int mtop = ReadVariable().IntValue();
+			int mright = ReadVariable().IntValue();
+			int mbottom = ReadVariable().IntValue();
+			int font = ReadVariable().IntValue();
+			int cspace = ReadVariable().IntValue();
+			int lspace = ReadVariable().IntValue();
+			int fsize = ReadVariable().IntValue();
+			mODMainUIController.RyukishiModeSettingLoad(name, posx, posy, sizex, sizey, mleft, mtop, mright, mbottom, font, cspace, lspace, fsize);
 			return BurikoVariable.Null;
 		}
 
@@ -2571,6 +2607,9 @@ namespace Assets.Scripts.Core.Buriko
 				case "":
 				case "none":
 					filter = MODSceneController.Filter.Identity;
+					break;
+				case "grayscale":
+					filter = MODSceneController.Filter.Grayscale;
 					break;
 				case "flashback":
 					filter = MODSceneController.Filter.Flashback;

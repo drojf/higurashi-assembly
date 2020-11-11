@@ -153,11 +153,13 @@ namespace BGICompiler.Compiler
 			paramLookup.Add("SetScreenAspect", new OpType(BurikoOperations.SetScreenAspect, "s"));
 			paramLookup.Add("SetGUIPosition", new OpType(BurikoOperations.SetGuiPosition, "ii"));
 			paramLookup.Add("Break", new OpType(BurikoOperations.Break, string.Empty));
+			paramLookup.Add("ModRyukishiSetGuiPosition", new OpType(BurikoOperations.ModRyukishiSetGuiPosition, "ii"));
 			paramLookup.Add("ModEnableNVLModeInADVMode", new OpType(BurikoOperations.ModEnableNVLModeInADVMode, string.Empty));
 			paramLookup.Add("ModDisableNVLModeInADVMode", new OpType(BurikoOperations.ModDisableNVLModeInADVMode, string.Empty));
 			paramLookup.Add("ModADVModeSettingLoad", new OpType(BurikoOperations.ModADVModeSettingLoad, "siiiiiiiiiiii"));
 			paramLookup.Add("ModNVLModeSettingLoad", new OpType(BurikoOperations.ModNVLModeSettingLoad, "siiiiiiiiiiii"));
 			paramLookup.Add("ModNVLADVModeSettingLoad", new OpType(BurikoOperations.ModNVLADVModeSettingLoad, "siiiiiiiiiiii"));
+			paramLookup.Add("ModRyukishiModeSettingLoad", new OpType(BurikoOperations.ModRyukishiModeSettingLoad, "siiiiiiiiiiii"));
 			paramLookup.Add("ModCallScriptSection", new OpType(BurikoOperations.ModCallScriptSection, "ss"));
 			paramLookup.Add("ModDrawCharacter", new OpType(BurikoOperations.ModDrawCharacter, "iissiiibiiiiiiiiib"));
 			paramLookup.Add("ModDrawCharacterWithFiltering", new OpType(BurikoOperations.ModDrawCharacterWithFiltering, "iisssiiibiiiiiiib"));
