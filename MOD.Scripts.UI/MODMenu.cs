@@ -73,6 +73,7 @@ namespace MOD.Scripts.UI
 		private bool startupFailed;
 		private string screenHeightString;
 		private bool anyButtonPressed;
+		Vector2 scrollPosition;
 
 		string lastToolTip = String.Empty;
 		string defaultTooltip = @"Hover over a button on the left panel for its description.
@@ -281,9 +282,10 @@ Sets the script censorship level
 
 			if (this.visible)
 			{
-				float areaWidth = styleManager.Group.menuWidth;
-				float toolTipWidth = 350;
-				float totalAreaWidth = areaWidth + toolTipWidth;
+				float totalAreaWidth = styleManager.Group.menuWidth; // areaWidth + toolTipWidth;
+
+				float areaWidth = Mathf.Round(totalAreaWidth * 9/16);
+				float toolTipWidth = Mathf.Round(totalAreaWidth * 7/16);
 
 				float areaHeight = styleManager.Group.menuHeight;
 
@@ -298,6 +300,9 @@ Sets the script censorship level
 				// Radio buttons
 				{
 					GUILayout.BeginArea(new Rect(areaPosX, areaPosY, areaWidth, areaHeight), styleManager.modMenuAreaStyle);
+					// Note: GUILayout.Height is adjusted to be slightly smaller, otherwise not all content is visible/scroll bar is slightly cut off.
+					scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUILayout.Width(areaWidth), GUILayout.Height(areaHeight-10));
+
 
 					if (this.radioADVNVLOriginal.OnGUIFragment(this.GetModeFromFlags()) is int newMode)
 					{
@@ -412,11 +417,27 @@ Sets the script censorship level
 						Application.OpenURL("https://07th-mod.com/wiki/Higurashi/support/");
 					}
 
+					Label("Resolution Settings");
 					{
 						GUILayout.BeginHorizontal();
-						Label("Custom Resolution");
+						if (Button(new GUIContent("480p", "Set resolution to 853 x 480"))) { SetAndSaveResolution(480); }
+						if (Button(new GUIContent("720p", "Set resolution to 1280 x 720"))) { SetAndSaveResolution(720); }
+						if (Button(new GUIContent("1080p", "Set resolution to 1920 x 1080"))) { SetAndSaveResolution(1080); }
+						if (Button(new GUIContent("1440p", "Set resolution to 2560 x 1440"))) { SetAndSaveResolution(1440); }
+						if (Button(new GUIContent("Full", "Toggle Fullscreen")))
+						{
+							if (gameSystem.IsFullscreen)
+							{
+								GameSystem.Instance.DeFullscreen(PlayerPrefs.GetInt("width"), PlayerPrefs.GetInt("height"));
+							}
+							else
+							{
+								gameSystem.GoFullscreen();
+							}
+						}
+
 						screenHeightString = GUILayout.TextField(screenHeightString);
-						if(Button(new GUIContent("Set Height", "Sets a custom resolution - mainly for windowed mode.\n\n" +
+						if(Button(new GUIContent("Set", "Sets a custom resolution - mainly for windowed mode.\n\n" +
 							"Height set automatically to maintain 16:9 aspect ratio.")))
 						{
 							if(int.TryParse(screenHeightString, out int new_height))
@@ -441,7 +462,7 @@ Sets the script censorship level
 						GUILayout.EndHorizontal();
 					}
 
-
+					GUILayout.EndScrollView();
 					GUILayout.EndArea();
 				}
 
@@ -453,7 +474,7 @@ Sets the script censorship level
 				GUILayout.FlexibleSpace();
 				GUILayout.EndHorizontal();
 
-				GUIStyle toolTipStyle = GUI.skin.label;
+				GUIStyle toolTipStyle = styleManager.Group.label;
 				string displayedToolTip;
 				if (GUI.tooltip == String.Empty)
 				{
@@ -602,5 +623,24 @@ Sets the script censorship level
 
 		private int GetGlobal(string flagName) => BurikoMemory.Instance.GetGlobalFlag(flagName).IntValue();
 		private void SetGlobal(string flagName, int flagValue) => BurikoMemory.Instance.SetGlobalFlag(flagName, flagValue);
+
+		private void SetAndSaveResolution(int height)
+		{
+			if (height < 480)
+			{
+				MODToaster.Show("Height too small - must be at least 480 pixels");
+				height = 480;
+			}
+			else if (height > 15360)
+			{
+				MODToaster.Show("Height too big - must be less than 15360 pixels");
+				height = 15360;
+			}
+			screenHeightString = $"{height}";
+			int width = Mathf.RoundToInt(height * 16f / 9f);
+			Screen.SetResolution(width, height, Screen.fullScreen);
+			PlayerPrefs.SetInt("width", width);
+			PlayerPrefs.SetInt("height", height);
+		}
 	}
 }

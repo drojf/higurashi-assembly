@@ -64,23 +64,23 @@ namespace MOD.Scripts.UI
 			modGUIBackgroundTexture.Apply();
 
 			style480 = GenerateWidgetStyles(
-				menuWidth: 400,
+				menuWidth: 850,
 				menuHeight: 480,
-				guiScale: .75f,
+				guiScale: .9f,
 				margin: new RectOffset(0, 0, 0, 0),
 				padding: new RectOffset(0, 0, 0, 0)
 			);
 
 			style720 = GenerateWidgetStyles(
-				menuWidth: 700,
-				menuHeight: 600,
+				menuWidth: 1200,
+				menuHeight: 660,
 				guiScale: 1f,
 				margin: new RectOffset(1, 1, 1, 1),
 				padding: new RectOffset(1, 1, 1, 1)
 			);
 
 			style1080 = GenerateWidgetStyles(
-				menuWidth: 800,
+				menuWidth: 1200,
 				menuHeight: 800,
 				guiScale: 1.25f,
 				margin: new RectOffset(2, 2, 2, 2),
