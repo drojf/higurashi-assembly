@@ -71,7 +71,6 @@ namespace MOD.Scripts.UI
 		private MODSimpleTimer defaultToolTipTimer;
 		private MODSimpleTimer startupWatchdogTimer;
 		private bool startupFailed;
-		private string screenWidthString;
 		private string screenHeightString;
 		private bool anyButtonPressed;
 
@@ -128,7 +127,6 @@ If they do not not work, click the button below to open the support page";
 			this.defaultToolTipTimer = new MODSimpleTimer();
 			this.startupWatchdogTimer = new MODSimpleTimer();
 			this.startupFailed = false;
-			this.screenWidthString = String.Empty;
 			this.screenHeightString = String.Empty;
 
 			this.radioADVNVLOriginal = new MODRadio("Set ADV/NVL/Original Mode", new GUIContent[]
@@ -415,39 +413,28 @@ Sets the script censorship level
 
 					{
 						GUILayout.BeginHorizontal();
-						GUILayout.Label("Custom Resolution");
-						screenWidthString = GUILayout.TextField(screenWidthString);
+						Label("Custom Resolution");
 						screenHeightString = GUILayout.TextField(screenHeightString);
-						if(Button(new GUIContent("Set", "Sets a custom resolution - mainly for windowed mode.")))
+						if(Button(new GUIContent("Set Height", "Sets a custom resolution - mainly for windowed mode.\n\n" +
+							"Height set automatically to maintain 16:9 aspect ratio.")))
 						{
-							if(int.TryParse(screenWidthString, out int new_width))
+							if(int.TryParse(screenHeightString, out int new_height))
 							{
-								if(int.TryParse(screenHeightString, out int new_height))
+								if(new_height < 480)
 								{
-									if(new_width < 800)
-									{
-										MODToaster.Show("Width too small - must be at least 800 pixels");
-										new_width = 800;
-									}
-									else if(new_width > 15360)
-									{
-										MODToaster.Show("Width too big - must be at least 15360 pixels");
-										new_width = 15360;
-									}
-									if (new_height < 650)
-									{
-										MODToaster.Show("Height too small - must be at least 650 pixels");
-										new_height = 650;
-									}
-									else if(new_height > 8640)
-									{
-										MODToaster.Show("Height too large - must be at least 8640 pixels");
-										new_height = 8640;
-									}
-									screenWidthString = $"{new_width}";
-									screenHeightString = $"{new_height}";
-									Screen.SetResolution(new_width, new_height, Screen.fullScreen);
+									MODToaster.Show("Width too small - must be at least 640 pixels");
+									new_height = 480;
 								}
+								else if(new_height > 15360)
+								{
+									MODToaster.Show("Width too big - must be at least 15360 pixels");
+									new_height = 15360;
+								}
+								screenHeightString = $"{new_height}";
+								int new_width = Mathf.RoundToInt(new_height * 16f / 9f);
+								Screen.SetResolution(new_width, new_height, Screen.fullScreen);
+								PlayerPrefs.SetInt("width", new_width);
+								PlayerPrefs.SetInt("height", new_height);
 							}
 						}
 						GUILayout.EndHorizontal();
