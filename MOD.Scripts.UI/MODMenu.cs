@@ -39,8 +39,8 @@ namespace MOD.Scripts.UI
 		/// <returns>If radio did not change value, null is returned, otherwise the new value is returned.</returns>
 		public int? OnGUIFragment(int displayedRadio)
 		{
-			GUILayout.Label(this.label);
-			int i = GUILayout.SelectionGrid(displayedRadio, radioContents, itemsPerRow, styleManager.modSelectorStyle);
+			GUILayout.Label(this.label, styleManager.Group.label);
+			int i = GUILayout.SelectionGrid(displayedRadio, radioContents, itemsPerRow, styleManager.Group.modMenuSelectionGrid);
 			if (i != displayedRadio)
 			{
 				MODRadio.anyRadioPressed = true;
@@ -233,7 +233,7 @@ Sets the script censorship level
 
 		private void OnGUIRestoreSettings()
 		{
-			GUILayout.Label($"Restore Settings {(GetGlobal("GMOD_SETTING_LOADER") == 3 ? "" : ": <Restart Pending>")}");
+			Label($"Restore Settings {(GetGlobal("GMOD_SETTING_LOADER") == 3 ? "" : ": <Restart Pending>")}");
 
 			GUILayout.BeginHorizontal();
 			if (GetGlobal("GMOD_SETTING_LOADER") == 3)
@@ -281,10 +281,11 @@ Sets the script censorship level
 
 			if (this.visible)
 			{
-				float areaWidth = 400;
+				float areaWidth = styleManager.Group.menuWidth;
 				float toolTipWidth = 350;
 				float totalAreaWidth = areaWidth + toolTipWidth;
-				float areaHeight = 600;
+
+				float areaHeight = styleManager.Group.menuHeight;
 
 				float areaPosX = Screen.width / 2 - totalAreaWidth / 2;
 				float areaPosY = Screen.height / 2 - areaHeight / 2;
@@ -296,7 +297,7 @@ Sets the script censorship level
 
 				// Radio buttons
 				{
-					GUILayout.BeginArea(new Rect(areaPosX, areaPosY, areaWidth, areaHeight), styleManager.modGUIStyle);
+					GUILayout.BeginArea(new Rect(areaPosX, areaPosY, areaWidth, areaHeight), styleManager.modMenuAreaStyle);
 
 					if (this.radioADVNVLOriginal.OnGUIFragment(this.GetModeFromFlags()) is int newMode)
 					{
@@ -335,7 +336,7 @@ Sets the script censorship level
 
 					GUILayout.BeginHorizontal();
 					GUILayout.FlexibleSpace();
-					GUILayout.Label("Advanced Options");
+					Label("Advanced Options");
 					GUILayout.FlexibleSpace();
 					GUILayout.EndHorizontal();
 
@@ -378,7 +379,7 @@ Sets the script censorship level
 					GUILayout.Space(10);
 					OnGUIRestoreSettings();
 
-					GUILayout.Label("Save and Log Files");
+					Label("Save and Log Files");
 					{
 						GUILayout.BeginHorizontal();
 						if (Button(new GUIContent("Show output_log.txt / Player.log",
@@ -422,12 +423,12 @@ Sets the script censorship level
 							{
 								if(new_height < 480)
 								{
-									MODToaster.Show("Width too small - must be at least 640 pixels");
+									MODToaster.Show("Height too small - must be at least 480 pixels");
 									new_height = 480;
 								}
 								else if(new_height > 15360)
 								{
-									MODToaster.Show("Width too big - must be at least 15360 pixels");
+									MODToaster.Show("Height too big - must be less than 15360 pixels");
 									new_height = 15360;
 								}
 								screenHeightString = $"{new_height}";
@@ -445,10 +446,10 @@ Sets the script censorship level
 				}
 
 				// Descriptions for each button are shown on hover, like a tooltip
-				GUILayout.BeginArea(new Rect(toolTipPosX, areaPosY, toolTipWidth, areaHeight), styleManager.modGUIStyle);
+				GUILayout.BeginArea(new Rect(toolTipPosX, areaPosY, toolTipWidth, areaHeight), styleManager.modMenuAreaStyle);
 				GUILayout.BeginHorizontal();
 				GUILayout.FlexibleSpace();
-				GUILayout.Label("Mod Options Menu");
+				Label("Mod Options Menu");
 				GUILayout.FlexibleSpace();
 				GUILayout.EndHorizontal();
 
@@ -461,7 +462,7 @@ Sets the script censorship level
 						if(this.startupFailed)
 						{
 							displayedToolTip = startupFailureToolTip;
-							toolTipStyle = styleManager.errorLabelStyle;
+							toolTipStyle = styleManager.Group.errorLabel;
 						}
 						else
 						{
@@ -516,7 +517,7 @@ Sets the script censorship level
 			}
 			this.radioArtSet.SetContents(descriptions);
 
-			this.screenWidthString = $"{Screen.width}";
+			this.screenHeightString = $"{Screen.width}";
 			this.screenHeightString = $"{Screen.height}";
 
 			this.visible = true;
@@ -583,7 +584,7 @@ Sets the script censorship level
 
 		private bool Button(GUIContent guiContent)
 		{
-			if(GUILayout.Button(guiContent))
+			if(GUILayout.Button(guiContent, styleManager.Group.button))
 			{
 				anyButtonPressed = true;
 				return true;
@@ -592,6 +593,11 @@ Sets the script censorship level
 			{
 				return false;
 			}
+		}
+
+		private void Label(string label)
+		{
+			GUILayout.Label(label, styleManager.Group.label);
 		}
 
 		private int GetGlobal(string flagName) => BurikoMemory.Instance.GetGlobalFlag(flagName).IntValue();
