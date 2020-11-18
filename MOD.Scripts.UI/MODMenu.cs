@@ -117,7 +117,7 @@ If they do not not work, click the button below to open the support page";
 
 		GUIContent[] defaultArtsetDescriptions = new GUIContent[] {
 			new GUIContent("Console", "Use the Console sprites and backgrounds"),
-			new GUIContent("Remake", "Use Mangagmer's remake sprites with Console backgrounds"),
+			new GUIContent("Remake", "Use Mangagamer's remake sprites with Console backgrounds"),
 			new GUIContent("Original/Remake", "Use Original/Ryukishi sprites and backgrounds\n" +
 			"Warning: Most users should just enable Original/Ryukishi mode at the top of this menu!"),
 		};
