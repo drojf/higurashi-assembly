@@ -67,7 +67,6 @@ namespace MOD.Scripts.UI
 		private readonly MODRadio radioBackgrounds;
 		private readonly MODRadio radioArtSet;
 		private readonly GameSystem gameSystem;
-		public bool visible;
 		private MODSimpleTimer defaultToolTipTimer;
 		private MODSimpleTimer startupWatchdogTimer;
 		private bool startupFailed;
@@ -75,6 +74,7 @@ namespace MOD.Scripts.UI
 		private bool anyButtonPressed;
 		Vector2 scrollPosition;
 		private static Vector2 emergencyMenuScrollPosition;
+		private bool lastMenuVisibleStatus;
 
 		string lastToolTip = String.Empty;
 		string defaultTooltip = @"Hover over a button on the left panel for its description.
@@ -125,7 +125,6 @@ If they do not not work, click the button below to open the support page";
 		{
 			this.gameSystem = gameSystem;
 			this.styleManager = styleManager;
-			this.visible = false;
 			this.defaultToolTipTimer = new MODSimpleTimer();
 			this.startupWatchdogTimer = new MODSimpleTimer();
 			this.startupFailed = false;
@@ -201,6 +200,8 @@ Sets the script censorship level
 
 			// Start the watchdog timer as soon as possible, so it starts from "when the game started"
 			this.startupWatchdogTimer.Start(5.0f);
+
+			this.lastMenuVisibleStatus = false;
 		}
 
 		public void Update()
@@ -213,7 +214,7 @@ Sets the script censorship level
 		{
 			if (Input.GetMouseButtonDown(1))
 			{
-				this.Hide();
+				gameSystem.RequestEnableInputs();
 			}
 		}
 
@@ -277,11 +278,33 @@ Sets the script censorship level
 				if (!BurikoScriptSystem.Instance.FlowWasReached)
 				{
 					this.startupFailed = true;
-					this.Show();
+					gameSystem.RequestDisableInputs();
 				}
 			}
 
-			if (this.visible)
+			bool menuShouldBeVisible = gameSystem.GameState == GameState.MODDisableInput;
+
+			if(menuShouldBeVisible && !lastMenuVisibleStatus)
+			{
+				// Executes just before menu becomes visible
+				// Update the artset radio buttons/descriptions, as these are set by ModAddArtset() calls in init.txt at runtime
+				// Technically only need to do this once after init.txt has been called, but it's easier to just do it each time menu is opened
+				GUIContent[] descriptions = Core.MODSystem.instance.modTextureController.GetArtStyleDescriptions();
+				for (int i = 0; i < descriptions.Count(); i++)
+				{
+					if (i < this.defaultArtsetDescriptions.Count())
+					{
+						descriptions[i] = this.defaultArtsetDescriptions[i];
+					}
+				}
+				this.radioArtSet.SetContents(descriptions);
+
+				this.screenHeightString = $"{Screen.width}";
+				this.screenHeightString = $"{Screen.height}";
+			}
+			lastMenuVisibleStatus = menuShouldBeVisible;
+
+			if (menuShouldBeVisible)
 			{
 				float totalAreaWidth = styleManager.Group.menuWidth; // areaWidth + toolTipWidth;
 
@@ -479,7 +502,7 @@ Sets the script censorship level
 				GUILayout.BeginArea(new Rect(toolTipPosX + toolTipWidth - exitButtonWidth, areaPosY, exitButtonWidth, exitButtonHeight));
 					if(Button(new GUIContent("X", "Close the Mod menu")))
 					{
-						this.Hide();
+						gameSystem.RequestEnableInputs();
 					}
 				GUILayout.EndArea();
 
@@ -489,85 +512,6 @@ Sets the script censorship level
 					MODRadio.anyRadioPressed = false;
 					anyButtonPressed = false;
 				}
-			}
-		}
-
-		public void Show()
-		{
-			// Update the artset radio buttons/descriptions, as these are set by ModAddArtset() calls in init.txt at runtime
-			// Technically only need to do this once after init.txt has been called, but it's easier to just do it each time menu is opened
-			GUIContent[] descriptions = Core.MODSystem.instance.modTextureController.GetArtStyleDescriptions();
-			for(int i = 0; i < descriptions.Count(); i++)
-			{
-				if(i < this.defaultArtsetDescriptions.Count())
-				{
-					descriptions[i] = this.defaultArtsetDescriptions[i];
-				}
-			}
-			this.radioArtSet.SetContents(descriptions);
-
-			this.screenHeightString = $"{Screen.width}";
-			this.screenHeightString = $"{Screen.height}";
-
-			this.visible = true;
-			DisableGameInput();
-		}
-
-		public void Hide()
-		{
-			this.visible = false;
-			EnableGameInput();
-		}
-
-		// These functions disable input to the game, while still letting
-		// the mod menu receive inputs.
-		/// <summary>
-		/// Calling this while game input is already disabled should be fine
-		/// as we only do this if there isn't already a DisableInput state on the stack
-		/// </summary>
-		private void DisableGameInput()
-		{
-			if (gameSystem.GameState != GameState.MODDisableInput)
-			{
-				ModChangeState(new MODStateDisableInput());
-				gameSystem.HideUIControls();
-			}
-		}
-
-		/// <summary>
-		/// Calling this while game input is already enabled should be fine
-		/// as we only do this if there is a DisableInput state available to pop
-		/// </summary>
-		private void EnableGameInput()
-		{
-			if (gameSystem.GameState == GameState.MODDisableInput)
-			{
-				gameSystem.PopStateStack();
-				gameSystem.ShowUIControls();
-			}
-		}
-
-		// This is a modified version of GameSystem.OnApplicationQuit()
-		private void ModChangeState(IGameState newState)
-		{
-			if (gameSystem.GameState == GameState.ConfigScreen)
-			{
-				gameSystem.RegisterAction(delegate
-				{
-					gameSystem.LeaveConfigScreen(delegate
-					{
-						gameSystem.PushStateObject(newState);
-					});
-				});
-				gameSystem.ExecuteActions();
-			}
-			else
-			{
-				gameSystem.RegisterAction(delegate
-				{
-					gameSystem.PushStateObject(newState);
-				});
-				gameSystem.ExecuteActions();
 			}
 		}
 

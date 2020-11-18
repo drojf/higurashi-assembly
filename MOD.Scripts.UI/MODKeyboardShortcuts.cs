@@ -185,17 +185,7 @@ namespace MOD.Scripts.UI
 					break;
 
 				case Action.ModMenu:
-					{
-						MODMenu menu = GameSystem.Instance.MainUIController.modMenu;
-						if (menu.visible)
-						{
-							menu.Hide();
-						}
-						else
-						{
-							menu.Show();
-						}
-					}
+					GameSystem.Instance.RequestToggleInputs();
 					break;
 
 				case Action.OpeningVideo:

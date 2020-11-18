@@ -211,6 +211,14 @@ namespace Assets.Scripts.Core
 			}
 		}
 
+		private bool disableInputsRequested;
+		private bool enableInputsRequested;
+		private bool toggleInputsRequested;
+
+		public void RequestDisableInputs() => disableInputsRequested = true;
+		public void RequestEnableInputs() => enableInputsRequested = true;
+		public void RequestToggleInputs() => toggleInputsRequested = true;
+
 		private void Initialize()
 		{
 			Logger.Log("GameSystem: Starting GameSystem");
@@ -845,6 +853,10 @@ namespace Assets.Scripts.Core
 				}
 				else
 				{
+					if (CanAdvance)
+					{
+						ModUpdate();
+					}
 					if (blockInputTime <= 0f)
 					{
 						if ((CanInput || GameState != GameState.Normal) && (inputHandler == null || !inputHandler()))
@@ -902,6 +914,46 @@ namespace Assets.Scripts.Core
 					}
 				}
 			}
+		}
+
+		/// <summary>
+		/// Should be able to safely execute state change code here as this is only executed
+		/// when no state transitions are occuring/no Actions are running
+		/// </summary>
+		private void ModUpdate()
+		{
+			if (disableInputsRequested || (toggleInputsRequested && GameState != GameState.MODDisableInput))
+			{
+				Logger.Log($"disabling inputs, Current game state {GameState}");
+
+				if (GameState == GameState.ConfigScreen)
+				{
+					LeaveConfigScreen(delegate
+					{
+						PushStateObject(new MOD.Scripts.Core.State.MODStateDisableInput());
+						HideUIControls();
+					});
+				}
+				else
+				{
+					PushStateObject(new MOD.Scripts.Core.State.MODStateDisableInput());
+					HideUIControls();
+				}
+			}
+			else if(enableInputsRequested || (toggleInputsRequested && GameState == GameState.MODDisableInput))
+			{
+				Logger.Log($"enabling inputs, Current game state {GameState}");
+				enableInputsRequested = false;
+				if (GameState == GameState.MODDisableInput)
+				{
+					PopStateStack();
+					ShowUIControls();
+				}
+			}
+
+			disableInputsRequested = false;
+			enableInputsRequested = false;
+			toggleInputsRequested = false;
 		}
 
 		private void OnDestroy()
