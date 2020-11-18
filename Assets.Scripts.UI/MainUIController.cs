@@ -787,7 +787,7 @@ namespace Assets.Scripts.UI
 
 		void OnApplicationQuit()
 		{
-			gameSystem.RequestEnableInputs();
+			modMenu.HideMenu();
 		}
 
 		/// <summary>

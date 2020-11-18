@@ -164,6 +164,8 @@ namespace Assets.Scripts.Core
 
 		public float AspectRatio;
 
+		public bool ignoreInputs;
+
 		// Unity will attempt to deserialize public properties and these aren't in the AssetBundle,
 		// so use private ones with public accessors
 		private bool _isFullscreen;
@@ -210,14 +212,6 @@ namespace Assets.Scripts.Core
 				gameState = value;
 			}
 		}
-
-		private bool disableInputsRequested;
-		private bool enableInputsRequested;
-		private bool toggleInputsRequested;
-
-		public void RequestDisableInputs() => disableInputsRequested = true;
-		public void RequestEnableInputs() => enableInputsRequested = true;
-		public void RequestToggleInputs() => toggleInputsRequested = true;
 
 		private void Initialize()
 		{
@@ -853,13 +847,9 @@ namespace Assets.Scripts.Core
 				}
 				else
 				{
-					if (CanAdvance)
-					{
-						ModUpdate();
-					}
 					if (blockInputTime <= 0f)
 					{
-						if ((CanInput || GameState != GameState.Normal) && (inputHandler == null || !inputHandler()))
+						if ((CanInput || GameState != GameState.Normal) && (ignoreInputs || inputHandler == null || !inputHandler()))
 						{
 							return;
 						}
@@ -914,46 +904,6 @@ namespace Assets.Scripts.Core
 					}
 				}
 			}
-		}
-
-		/// <summary>
-		/// Should be able to safely execute state change code here as this is only executed
-		/// when no state transitions are occuring/no Actions are running
-		/// </summary>
-		private void ModUpdate()
-		{
-			if (disableInputsRequested || (toggleInputsRequested && GameState != GameState.MODDisableInput))
-			{
-				Logger.Log($"disabling inputs, Current game state {GameState}");
-
-				if (GameState == GameState.ConfigScreen)
-				{
-					LeaveConfigScreen(delegate
-					{
-						PushStateObject(new MOD.Scripts.Core.State.MODStateDisableInput());
-						HideUIControls();
-					});
-				}
-				else
-				{
-					PushStateObject(new MOD.Scripts.Core.State.MODStateDisableInput());
-					HideUIControls();
-				}
-			}
-			else if(enableInputsRequested || (toggleInputsRequested && GameState == GameState.MODDisableInput))
-			{
-				Logger.Log($"enabling inputs, Current game state {GameState}");
-				enableInputsRequested = false;
-				if (GameState == GameState.MODDisableInput)
-				{
-					PopStateStack();
-					ShowUIControls();
-				}
-			}
-
-			disableInputsRequested = false;
-			enableInputsRequested = false;
-			toggleInputsRequested = false;
 		}
 
 		private void OnDestroy()

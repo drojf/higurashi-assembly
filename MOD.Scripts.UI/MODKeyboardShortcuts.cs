@@ -10,9 +10,23 @@ namespace MOD.Scripts.UI
 	static class MODKeyboardShortcuts
 	{
 
-		private static bool ModInputHandlingAllowed()
+		public static bool ModInputHandlingAllowed()
 		{
 			GameSystem gameSystem = GameSystem.Instance;
+
+			switch (gameSystem.GameState)
+			{
+				case GameState.RightClickMenu:
+				case GameState.Normal:
+				case GameState.TitleScreen:
+				case GameState.MODDisableInput:
+					break;
+
+				default:
+					return false;
+			}
+
+
 			if (!gameSystem.IsInitialized || gameSystem.IsAuto || gameSystem.IsSkipping || gameSystem.IsForceSkip)
 			{
 				return false;
@@ -184,10 +198,6 @@ namespace MOD.Scripts.UI
 					}
 					break;
 
-				case Action.ModMenu:
-					GameSystem.Instance.RequestToggleInputs();
-					break;
-
 				case Action.OpeningVideo:
 					{
 						// Loop "GVideoOpening" over the values 1-3.
@@ -301,13 +311,22 @@ namespace MOD.Scripts.UI
 		{
 			if (GetUserAction() is Action action)
 			{
-				if (!ModInputHandlingAllowed())
+				bool handlingAllowed = ModInputHandlingAllowed();
+
+				if (action == Action.ModMenu)
 				{
-					MODToaster.Show($"Please let animation finish first");
+					GameSystem.Instance.MainUIController.modMenu.ToggleVisibility();
 				}
 				else
 				{
-					ModHandleUserAction(action);
+					if (!handlingAllowed)
+					{
+						MODToaster.Show($"Please let animation finish first and/or close the menu");
+					}
+					else
+					{
+						ModHandleUserAction(action);
+					}
 				}
 			}
 

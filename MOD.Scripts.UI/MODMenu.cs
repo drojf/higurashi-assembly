@@ -75,6 +75,7 @@ namespace MOD.Scripts.UI
 		Vector2 scrollPosition;
 		private static Vector2 emergencyMenuScrollPosition;
 		private bool lastMenuVisibleStatus;
+		private bool visible;
 
 		string lastToolTip = String.Empty;
 		string defaultTooltip = @"Hover over a button on the left panel for its description.
@@ -214,7 +215,7 @@ Sets the script censorship level
 		{
 			if (Input.GetMouseButtonDown(1))
 			{
-				gameSystem.RequestEnableInputs();
+				HideMenu();
 			}
 		}
 
@@ -278,13 +279,11 @@ Sets the script censorship level
 				if (!BurikoScriptSystem.Instance.FlowWasReached)
 				{
 					this.startupFailed = true;
-					gameSystem.RequestDisableInputs();
+					ShowMenu();
 				}
 			}
 
-			bool menuShouldBeVisible = gameSystem.GameState == GameState.MODDisableInput;
-
-			if(menuShouldBeVisible && !lastMenuVisibleStatus)
+			if(visible && !lastMenuVisibleStatus)
 			{
 				// Executes just before menu becomes visible
 				// Update the artset radio buttons/descriptions, as these are set by ModAddArtset() calls in init.txt at runtime
@@ -302,9 +301,9 @@ Sets the script censorship level
 				this.screenHeightString = $"{Screen.width}";
 				this.screenHeightString = $"{Screen.height}";
 			}
-			lastMenuVisibleStatus = menuShouldBeVisible;
+			lastMenuVisibleStatus = visible;
 
-			if (menuShouldBeVisible)
+			if (visible)
 			{
 				float totalAreaWidth = styleManager.Group.menuWidth; // areaWidth + toolTipWidth;
 
@@ -502,7 +501,7 @@ Sets the script censorship level
 				GUILayout.BeginArea(new Rect(toolTipPosX + toolTipWidth - exitButtonWidth, areaPosY, exitButtonWidth, exitButtonHeight));
 					if(Button(new GUIContent("X", "Close the Mod menu")))
 					{
-						gameSystem.RequestEnableInputs();
+						HideMenu();
 					}
 				GUILayout.EndArea();
 
@@ -513,6 +512,46 @@ Sets the script censorship level
 					anyButtonPressed = false;
 				}
 			}
+		}
+
+		public void ToggleVisibility()
+		{
+			if (this.visible)
+			{
+				HideMenu();
+			}
+			else
+			{
+				if (gameSystem.GameState == GameState.SaveLoadScreen)
+				{
+					MODToaster.Show("Please close the current menu and try again");
+				}
+				else if (gameSystem.GameState == GameState.ConfigScreen)
+				{
+					gameSystem.LeaveConfigScreen(delegate
+					{
+						ShowMenu();
+					});
+				}
+				else
+				{
+					ShowMenu();
+				}
+			}
+		}
+
+		private void ShowMenu()
+		{
+			gameSystem.ignoreInputs = true;
+			gameSystem.HideUIControls();
+			this.visible = true;
+		}
+
+		public void HideMenu()
+		{
+			this.visible = false;
+			gameSystem.ignoreInputs = false;
+			gameSystem.ShowUIControls();
 		}
 
 		private bool Button(GUIContent guiContent)
