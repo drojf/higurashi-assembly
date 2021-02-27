@@ -55,7 +55,7 @@ namespace MOD.Scripts.Core.Audio
 		{
 			if(LoggingEnabled)
 			{
-				Logger.Log($"[MODAudioTracking]: text");
+				Logger.Log($"[MODAudioTracking]: {text}");
 			}
 		}
 
