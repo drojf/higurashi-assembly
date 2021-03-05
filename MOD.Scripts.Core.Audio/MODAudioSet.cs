@@ -222,11 +222,11 @@ namespace MOD.Scripts.Core.Audio
 		public bool GetSECascade(int altSE, out PathCascadeList cascade) => GetCascade(altSE, SECascades, defaultSECascade, out cascade);
 		public bool GetVoiceCascade(int altVoice, out PathCascadeList cascade) => GetCascade(altVoice, voiceCascades, defaultVoiceCascade, out cascade);
 
-		private static bool GetCascade(int altBGM, List<PathCascadeList> inputCascades, PathCascadeList defaultCascade, out PathCascadeList cascade)
+		private static bool GetCascade(int i, List<PathCascadeList> inputCascades, PathCascadeList defaultCascade, out PathCascadeList cascade)
 		{
-			if(altBGM < inputCascades.Count)
+			if(i < inputCascades.Count)
 			{
-				cascade = inputCascades[altBGM];
+				cascade = inputCascades[i];
 				return true;
 			}
 
