@@ -63,11 +63,11 @@ namespace MOD.Scripts.UI
 			if (MODAudioSet.Instance.HasAudioSetsDefined())
 			{
 				// Set GAltBGM, GAltSE, GAltBGMFlow, GAltSEFlow to the same value. In the future we may set them to different values.
-				if (this.radioBGMSESet.OnGUIFragment(c.GetGlobal("GAudioSet") > 0 ? c.GetGlobal("GAudioSet") - 1 : 0) is int newBGMSEValue)
+				if (this.radioBGMSESet.OnGUIFragment(c.GetGlobal("GAudioSet") > 0 ? c.GetGlobal("GAudioSet") - 1 : 0) is int newAudioSetZeroBased)
 				{
-					if(MODAudioSet.Instance.GetAudioSet(newBGMSEValue, out AudioSet audioSet) && audioSet.IsInstalledCached())
+					if(MODAudioSet.Instance.GetAudioSet(newAudioSetZeroBased, out AudioSet audioSet) && audioSet.IsInstalledCached())
 					{
-						MODAudioSet.Instance.SetFromZeroBasedIndex(newBGMSEValue);
+						MODAudioSet.Instance.SetAndSaveAudioFlags(newAudioSetZeroBased);
 					}
 				}
 			}
