@@ -159,6 +159,7 @@ You can try the following yourself to fix the issue.
 
 			GUI.depth = 0;
 
+			// Show a troubleshooting message if game failed to start-up
 			if (this.startupWatchdogTimer.Finished())
 			{
 				this.startupWatchdogTimer.Cancel();
@@ -169,6 +170,10 @@ You can try the following yourself to fix the issue.
 				}
 			}
 
+			if(BurikoScriptSystem.Instance.FlowWasReached)
+			{
+				this.startupFailed = false;
+			}
 			// Button to open the Mod Menu on the Config Screen
 			if (gameSystem.GameState == GameState.ConfigScreen)
 			{
