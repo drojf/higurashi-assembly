@@ -129,7 +129,10 @@ You can try the following yourself to fix the issue.
 
 			if (debug)
 			{
-				c.Button(new GUIContent("Reset GAudioSet", "Set GAudioSet to 0, to force the game to do audio setup on next startup"));
+				if(c.Button(new GUIContent("Reset GAudioSet", "Set GAudioSet to 0, to force the game to do audio setup on next startup")))
+				{
+					c.SetGlobal("GAudioSet", 0);
+				}
 			}
 
 			if (c.Button(new GUIContent("Close", "Close the debug menu")))
